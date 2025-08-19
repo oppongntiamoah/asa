@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load tz dict_extras %}
+
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Available Activities</h2>
+    <p>You have booked {{ total_booked }} / 3 activities this week.</p>
+
+    {% for day_group in grouped_activities %}
+        <h4 class="mt-4">{{ day_group.day }}</h4>
+        {% if day_group.activities %}
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Instructor</th>
+                        <th>Venue</th>
+                        <th>Spots Left</th>
+                        <th style="width: 120px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in day_group.activities %}
+                        {% with booking=booking_map|get_item:activity.id %}
+                        <tr {% if booking %}class="table-danger"{% endif %}>
+                            <td>{{ activity.name }}</td>
+                            <td>{{ activity.instructor|default:"-" }}</td>
+                            <td>{{ activity.venue|default:"-" }}</td>
+                            <td>
+                                {% if activity.capacity == 0 %}
+                                    Unlimited
+                                {% else %}
+                                    {{ activity.spots_left }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if booking %}
+                                    {% if booking.can_modify %}
+                                        <a href="{% url 'unbook_activity' activity.id %}" class="btn btn-sm btn-danger">
+                                            Unbook
+                                        </a>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Locked</span>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="{% url 'book_activity' activity.id %}" class="btn btn-sm btn-primary">
+                                        Book
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-muted">No activities available for your grade.</p>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endblock %}

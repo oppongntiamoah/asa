@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Booking Report</h2>
+{% for activity in activities %}
+  <h4>{{ activity.name }} ({{ activity.day }})</h4>
+  <ul>
+    {% for booking in activity.booking_set.all %}
+      <li>{{ booking.student.user.get_full_name }} - {{ booking.date_booked }}</li>
+    {% empty %}
+      <li>No bookings yet</li>
+    {% endfor %}
+  </ul>
+{% endfor %}
+{% endblock %}
