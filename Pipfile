@@ -9,6 +9,7 @@ django-formtools = "*"
 django-import-export = "*"
 django-crispy-forms = "*"
 crispy-bootstrap5 = "*"
+mysqlclient = "*"
 
 [dev-packages]
 
