@@ -82,6 +82,11 @@ def book_activity(request, pk):
 
 @login_required
 def booking_report(request):
+    
+    # Restrict access to staff (or superuser) only
+    if not request.user.is_staff:   # change to is_superuser if you want stricter
+        return redirect('booking_wizard', step=0)  
+    
     # Total students
     total_students = StudentProfile.objects.count()
 
