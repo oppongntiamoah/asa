@@ -23,6 +23,8 @@ class Activity(models.Model):
     instructor = models.CharField(max_length=150, blank=True, null=True)
     venue = models.CharField(max_length=150, blank=True, null=True)
     capacity = models.PositiveIntegerField(default=0, help_text="0 = Unlimited capacity")
+    
+    time = models.CharField(max_length=50)
 
     class Meta:
         ordering = ['day','name']
@@ -80,7 +82,7 @@ class Booking(models.Model):
     
     def can_modify(self):
         """Returns True if booking can be unbooked/changed."""
-        return timezone.now() - self.date_created <= timedelta(minutes=30)
+        return timezone.now() - self.date_created <= timedelta(minutes=10)
 
     def __str__(self):
         return f"{self.student} → {self.activity} on {self.day}"

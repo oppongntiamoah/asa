@@ -5,7 +5,8 @@
 {% block content %}
 <div class="container mt-4">
     <h2 class="mb-3">Available Activities</h2>
-    <p>You have booked {{ total_booked }} / 3 activities this week.</p>
+    <small style=" color: rgba(251, 0, 0, 1);">All students are required to participate in at least 3 activities weekly</small>
+    <p>You have booked {{ total_booked }} / 7 activities this week.</p>
 
     {% for day_group in grouped_activities %}
         <h4 class="mt-4">{{ day_group.day }}</h4>
@@ -13,10 +14,11 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>Name</th>
-                        <th>Instructor</th>
+                        <th>Activity</th>
+                        <th>Instructor/Patron</th>
                         <th>Venue</th>
-                        <th>Spots Left</th>
+                        <th>Time</th>
+                        <th>Vacancy</th>
                         <th style="width: 120px;">Action</th>
                     </tr>
                 </thead>
@@ -27,6 +29,7 @@
                             <td>{{ activity.name }}</td>
                             <td>{{ activity.instructor|default:"-" }}</td>
                             <td>{{ activity.venue|default:"-" }}</td>
+                            <td>{{ activity.time|default:"-" }}</td>
                             <td>
                                 {% if activity.capacity == 0 %}
                                     Unlimited

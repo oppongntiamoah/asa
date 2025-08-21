@@ -27,6 +27,7 @@ class ActivityResource(resources.ModelResource):
             "venue",
             "capacity",
             "allowed_grades",
+            "time",
         )
 
 

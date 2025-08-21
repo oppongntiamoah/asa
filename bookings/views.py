@@ -8,6 +8,7 @@ from .forms import CustomUserCreationForm, StudentProfileForm
 
 from .forms import DaySelectionForm
 
+from django.db.models import Count
 
 
 @login_required
@@ -78,10 +79,33 @@ def book_activity(request, pk):
     return redirect('activity_list')
 
 
+
 @login_required
 def booking_report(request):
-    activities = Activity.objects.all().order_by('day', 'name')
-    return render(request, 'activities/report.html', {'activities': activities})
+    # Total students
+    total_students = StudentProfile.objects.count()
+
+    # Students by grade
+    students_by_grade = (
+        StudentProfile.objects.values('grade')
+        .annotate(total=Count('id'))
+        .order_by('grade')
+    )
+
+    # Activities with bookings
+    activities = (
+        Activity.objects.all()
+        .order_by('day', 'name')
+        .prefetch_related('bookings__student')   # Optimize queries
+    )
+
+    return render(request, 'activities/report.html', {
+        'total_students': total_students,
+        'students_by_grade': students_by_grade,
+        'activities': activities,
+    })
+
+
 
 
 @login_required
@@ -98,6 +122,14 @@ def unbook_activity(request, pk):
         messages.error(request, "You can no longer unbook this activity (time limit exceeded).")
         return redirect('activity_list')
 
+    # Count how many bookings the student currently has
+    total_booked = Booking.objects.filter(student=student).count()
+
+    # Prevent unbooking if it would go below 3
+    if total_booked <= 3:
+        messages.error(request, "You must have at least 3 bookings. Cannot unbook further.")
+        return redirect('activity_list')
+
     booking.delete()
     messages.success(request, "Booking removed.")
     return redirect('activity_list')
@@ -105,52 +137,61 @@ def unbook_activity(request, pk):
 
 
 
-DAYS = [d[0] for d in Activity.DAYS]  # ['Monday', 'Tuesday', ...]
 
 @login_required
 def booking_wizard(request, step=0):
     student = StudentProfile.objects.get(user=request.user)
 
+    # Prevent entering booking wizard if already booked
+    existing_bookings = Booking.objects.filter(student=student)
+    if existing_bookings.exists():
+        messages.warning(request, "You have already made your bookings.")
+        return redirect("activity_list")
+
     # First step: reset choices
     if step == 0:
         request.session['booking_choices'] = {}
 
-    if step >= len(DAYS):
+    days = Activity.DAYS
+    if step >= len(days):
+        # All steps completed → finalize booking
         selections = request.session.get('booking_choices', {})
         chosen_days = [day for day, act in selections.items() if act]
 
-        # Rule: Must choose exactly 3 days
-        if len(chosen_days) != 3:
-            messages.error(request, "You must book exactly 3 activities, one per chosen day.")
+        # Rule: Must choose exactly 3 activities
+        if len(chosen_days) < 3:
+            messages.error(request, "You must select at least 3 activities in total.")
             return redirect('booking_wizard', step=0)
 
-        # Save all
-        for day, activity_id in selections.items():
-            if activity_id:
-                # Ensure one per day
-                if not Booking.objects.filter(student=student, day=day).exists():
-                    activity = Activity.objects.get(id=activity_id)
-                    Booking.objects.create(student=student, activity=activity)
+        # Save bookings
+        for activity_id in selections.values():
+            if activity_id:  # skip empty
+                Booking.objects.get_or_create(student=student, activity_id=activity_id)
 
-        messages.success(request, "Your 3 bookings have been saved!")
-        return redirect('activity_list')
+        messages.success(request, "Your activities have been booked successfully!")
+        return redirect('activity_list')  # Or summary page
 
-    day = DAYS[step]
-    form = DaySelectionForm(day, student.grade, request.POST or None)
+    day_key, day_label = days[step]
+    activities = Activity.objects.filter(
+        day=day_key,
+        allowed_grades=student.grade
+    )
 
-    if request.method == 'POST' and form.is_valid():
-        activity_id = form.cleaned_data['activity']
+    if request.method == "POST":
+        choice = request.POST.get("activity")
         choices = request.session.get('booking_choices', {})
-        choices[day] = activity_id
+        choices[day_key] = choice
         request.session['booking_choices'] = choices
         return redirect('booking_wizard', step=step+1)
 
     return render(request, 'activities/booking_wizard.html', {
-        'form': form,
-        'day': day,
-        'step': step + 1,
-        'total_steps': len(DAYS)
+        'step': step,
+        'day_label': day_label,
+        'activities': activities,
+        'total_steps': len(days),
+        'current_choices': request.session.get('booking_choices', {})
     })
+
 
 
 

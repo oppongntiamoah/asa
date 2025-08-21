@@ -66,11 +66,11 @@ class CustomUserCreationForm(UserCreationForm):
         model = CustomUser
         fields = ("email",)
 
-    def clean_email(self):
-        email = self.cleaned_data.get("email")
-        if not AllowedUser.objects.filter(email=email).exists():
-            raise forms.ValidationError("This email is not allowed to register.")
-        return email
+    # def clean_email(self):
+    #     email = self.cleaned_data.get("email")
+    #     if not AllowedUser.objects.filter(email=email).exists():
+    #         raise forms.ValidationError("This email is not allowed to register.")
+    #     return email
 
 
 class StudentProfileForm(forms.ModelForm):

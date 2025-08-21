@@ -1,17 +1,61 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="card">
-  <div class="card-body">
-    <h4>Step {{ step }} of {{ total_steps }} — {{ day }}</h4>
+<div class="container mt-4">
+    <h2>Step {{ step|add:1 }} of {{ total_steps }}</h2>
+    <h4>{{ day_label }}</h4>
+    <small class="text-danger">You must select at least 3 activities in total.</small>
+
     <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <div class="mt-3">
-        <button type="submit" class="btn btn-primary">
-          {% if step == total_steps %}Finish{% else %}Next{% endif %}
-        </button>
-      </div>
+        {% csrf_token %}
+        <table class="table table-hover align-middle mt-3">
+            <thead class="table-light">
+                <tr>
+                    <th>Select</th>
+                    <th>Activity</th>
+                    <th>Instructor/Patron</th>
+                    <th>Venue</th>
+                    <th>Time</th>
+                    <th>Vacancy</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in activities %}
+                    <tr>
+                        <td>
+                            <input type="radio" 
+                                   name="activity" 
+                                   value="{{ activity.id }}" 
+                                   {% if current_choices.day == activity.id %}checked{% endif %}>
+                        </td>
+                        <td>{{ activity.name }}</td>
+                        <td>{{ activity.instructor|default:"-" }}</td>
+                        <td>{{ activity.venue|default:"-" }}</td>
+                        <td>{{ activity.time|default:"-" }}</td>
+                        <td>
+                            {% if activity.capacity == 0 %}
+                                Unlimited
+                            {% else %}
+                                {{ activity.spots_left }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-muted">No activities available for your grade on this day.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="d-flex justify-content-between mt-3">
+            {% if step > 0 %}
+                <a href="{% url 'booking_wizard' step=step|add:-1 %}" class="btn btn-secondary">Back</a>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">
+                {% if step|add:1 == total_steps %}Finish{% else %}Next{% endif %}
+            </button>
+        </div>
     </form>
-  </div>
 </div>
 {% endblock %}
