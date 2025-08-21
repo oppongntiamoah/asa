@@ -29,15 +29,15 @@ class GradeAdmin(ImportExportModelAdmin):
 @admin.register(Activity)
 class ActivityAdmin(ImportExportModelAdmin):
     resource_class = ActivityResource
-    list_display = ('name','day','capacity','bookings_count','spots_left','allowed_grades_list')
+    list_display = ('name','day', 'time', 'capacity','bookings_count','spots_left','allowed_grades_list')
     list_filter = ('day', 'allowed_grades')
     search_fields = ('name',)
-    filter_horizontal = ('allowed_grades',)
+    filter_horizontal = ('allowed_grades','time')
     readonly_fields = ('bookings_count','spots_left')
     actions = ['export_activities_csv']
 
     fieldsets = (
-        (None, {'fields': ('name','day')}),
+        (None, {'fields': ('name','day', 'time')}),
         ('Capacity & Grades', {'fields': ('capacity','allowed_grades','bookings_count','spots_left')}),
     )
 
