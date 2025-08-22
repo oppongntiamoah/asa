@@ -8,7 +8,59 @@ from .forms import CustomUserCreationForm, StudentProfileForm
 
 from .forms import DaySelectionForm
 
-from django.db.models import Count
+
+from django.db.models import Count, Q
+
+@login_required
+def dashboard(request):
+    # Restrict access to staff (or superuser) only
+    if not request.user.is_admin:
+        return redirect('booking_wizard', step=0)  
+
+    # Total students (users registered with profile)
+    total_students = StudentProfile.objects.count()
+
+    # Students by grade
+    students_by_grade = (
+        StudentProfile.objects.values('grade')
+        .annotate(total=Count('id'))
+        .order_by('grade')
+    )
+
+    # Activities with bookings
+    activities = (
+        Activity.objects
+        .annotate(num_bookings=Count('bookings'))
+        .filter(num_bookings=0)   # only activities with 0 bookings
+        .order_by('day', 'name')
+    )
+
+    # --- New Stats ---
+    # Count bookings per student
+    bookings_per_student = (
+        Booking.objects.values('student')
+        .annotate(total_bookings=Count('id'))
+    )
+
+    # Students who booked all 7 days
+    booked_all_7 = bookings_per_student.filter(total_bookings=7).count()
+
+    # Students who booked exactly 3
+    booked_exactly_3 = bookings_per_student.filter(total_bookings=3).count()
+
+    # Students who booked >3 and <7
+    booked_between = bookings_per_student.filter(total_bookings__gt=3, total_bookings__lt=7).count()
+
+    return render(request, 'activities/report.html', {
+        'total_students': total_students,
+        'students_by_grade': students_by_grade,
+        'activities': activities,
+        'booked_all_7': booked_all_7,
+        'booked_exactly_3': booked_exactly_3,
+        'booked_between': booked_between,
+    })
+
+
 
 
 @login_required
@@ -79,36 +131,6 @@ def book_activity(request, pk):
     return redirect('activity_list')
 
 
-
-@login_required
-def booking_report(request):
-    
-    # Restrict access to staff (or superuser) only
-    if not request.user.is_admin:   # change to is_superuser if you want stricter
-        return redirect('booking_wizard', step=0)  
-    
-    # Total students
-    total_students = StudentProfile.objects.count()
-
-    # Students by grade
-    students_by_grade = (
-        StudentProfile.objects.values('grade')
-        .annotate(total=Count('id'))
-        .order_by('grade')
-    )
-
-    # Activities with bookings
-    activities = (
-        Activity.objects.all()
-        .order_by('day', 'name')
-        .prefetch_related('bookings__student')   # Optimize queries
-    )
-
-    return render(request, 'activities/report.html', {
-        'total_students': total_students,
-        'students_by_grade': students_by_grade,
-        'activities': activities,
-    })
 
 
 

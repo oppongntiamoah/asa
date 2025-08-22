@@ -1,77 +1,155 @@
 {% extends 'base.html' %}
+
+
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Booking Report</h2>
+<div class="row">
+    <div class="col-md-3 col-sm-6 col-12">
+    <div class="info-box">
+        <span class="info-box-icon bg-info"><i class="far fa-user"></i></span>
 
-    <!-- Summary Card -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Overall Summary</h5>
-            <p class="card-text">
-                <strong>Total Students:</strong> {{ total_students }}
-            </p>
-            <h6>By Grade:</h6>
-            <ul class="list-group list-group-flush">
-                {% for g in students_by_grade %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        Grade {{ g.grade }}
-                        <span class="badge bg-primary rounded-pill">{{ g.total }}</span>
-                    </li>
-                {% empty %}
-                    <li class="list-group-item">No students found.</li>
-                {% endfor %}
-            </ul>
+        <div class="info-box-content">
+        <span class="info-box-text">Total Students</span>
+        <span class="info-box-number">{{total_students}}</span>
         </div>
+        <!-- /.info-box-content -->
     </div>
+    <!-- /.info-box -->
+    </div>
+    <!-- /.col -->
+    <div class="col-md-3 col-sm-6 col-12">
+    <div class="info-box">
+        <span class="info-box-icon bg-success"><i class="far fa-flag"></i></span>
 
-    <!-- Activity Cards -->
-    <div class="row">
-        {% for activity in activities %}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-light">
-                        <strong>{{ activity.name }}</strong> 
-                        <span class="text-muted">({{ activity.day }}, {{ activity.time|default:"-" }})</span>
-                    </div>
-                    <div class="card-body">
-                        <p>
-                            <strong>Instructor:</strong> {{ activity.instructor|default:"-" }} <br>
-                            <strong>Venue:</strong> {{ activity.venue|default:"-" }} <br>
-                            <strong>Total Booked:</strong> {{ activity.bookings.count }}
-                        </p>
+        <div class="info-box-content">
+        <span class="info-box-text">Booked all 7</span>
+        <span class="info-box-number">{{ booked_all_7 }}</span>
+        </div>
+        <!-- /.info-box-content -->
+    </div>
+    <!-- /.info-box -->
+    </div>
+    <!-- /.col -->
+    <div class="col-md-3 col-sm-6 col-12">
+    <div class="info-box">
+        <span class="info-box-icon bg-warning"><i class="far fa-copy"></i></span>
 
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Student</th>
-                                        <th>Grade</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for booking in activity.bookings.all %}
-                                        <tr>
-                                            <td>{{ forloop.counter }}</td>
-                                            <td>{{ booking.student.user.get_full_name }}</td>
-                                            <td>{{ booking.student.grade }}</td>
-                                        </tr>
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="3" class="text-muted">No students booked.</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+        <div class="info-box-content">
+        <span class="info-box-text">Booked Exactly 3</span>
+        <span class="info-box-number">{{ booked_exactly_3 }}</span>
+        </div>
+        <!-- /.info-box-content -->
+    </div>
+    <!-- /.info-box -->
+    </div>
+    <!-- /.col -->
+    <div class="col-md-3 col-sm-6 col-12">
+    <div class="info-box">
+        <span class="info-box-icon bg-danger"><i class="far fa-star"></i></span>
+
+        <div class="info-box-content">
+        <span class="info-box-text">Booked between 3 and 7</span>
+        <span class="info-box-number">{{ booked_between }}</span>
+        </div>
+        <!-- /.info-box-content -->
+    </div>
+    <!-- /.info-box -->
+    </div>
+    <!-- /.col -->
+</div>
+<!-- /.row -->
+
+ <div class="row">
+    <!-- Left col -->
+    <div class="col-md-6">
+        <!-- TABLE: LATEST ORDERS -->
+        <div class="card">
+            <div class="card-header border-transparent">
+            <h3 class="card-title">Students by Grade</h3>
+            </div>
+
+            <!-- /.card-header -->
+            <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table m-0">
+                <thead>
+                <tr>
+                    <th>Grade </th>
+                    <th>Total Students</th>
+                </tr>
+                </thead>
+                <tbody>
+                    {% for g in students_by_grade %}
+                    <tr>
+                        <td>Grade {{ g.grade }}</td>
+                        <td>{{ g.total }}</td>
+                    </tr>
+                    
+                    {% empty %}
+                    <tr>
+                        <td cols="2">No students found.</td>
+                    </tr>
+                    {% endfor %}
+                
+                
+                </tbody>
+                </table>
+            </div>
+            <!-- /.table-responsive -->
+            </div>
+            <!-- /.card-body -->
+        </div>
+        <!-- /.card -->
+    </div>
+    <!-- /.col -->
+
+    <div class="col-md-6">
+        <!-- TABLE: LATEST ORDERS -->
+        <div class="card">
+            <div class="card-header border-transparent">
+            <h3 class="card-title">Activities with 0 Bookings</h3>
+            </div>
+
+            <!-- /.card-header -->
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                        <th>Day</th>
+                        <th>Activity</th>
+                        <th>Capacity</th>
+                        <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in activities %}
+                        <tr>
+                            <td>{{ activity.day }}</td>
+                            <td>{{ activity.name }}</td>
+                            <td>
+                            {% if activity.capacity == 0 %}
+                                Unlimited
+                            {% else %}
+                                {{ activity.capacity }}
+                            {% endif %}
+                            </td>
+                            <td>{{ activity.time }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">All activities have bookings 🎉</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
+
                 </div>
+            <!-- /.table-responsive -->
             </div>
-        {% empty %}
-            <div class="col-12">
-                <div class="alert alert-info">No activities available.</div>
-            </div>
-        {% endfor %}
+            <!-- /.card-body -->
+        </div>
+        <!-- /.card -->
     </div>
+
 </div>
 {% endblock %}

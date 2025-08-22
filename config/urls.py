@@ -10,7 +10,7 @@ urlpatterns = [
     path('activity/', views.activity_list, name='activity_list'),
     path('book/<int:pk>/', views.book_activity, name='book_activity'),
     path('unbook/<int:pk>/', views.unbook_activity, name='unbook_activity'),
-    path('', views.booking_report, name='booking_report'),
+    path('', views.dashboard, name='dashboard'),
     path('booking-wizard/<int:step>/', views.booking_wizard, name='booking_wizard'),
 
     path("register", views.register, name="register"),

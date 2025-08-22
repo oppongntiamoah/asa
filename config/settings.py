@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-x_5pvmq*1lvc73acg7$tzo8_j)pub_#aw18o8*v_kp8^i&e$$e'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -94,17 +94,28 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # }
 
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'agyapong$default',
+#         'USER': 'agyapong',
+#         'PASSWORD': 'DeadTrap1',
+#         'HOST': 'agyapong.mysql.pythonanywhere-services.com',   # or IP
+#         'PORT': '3306',        # default MySQL port
+#     }
+# }
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'agyapong$default',
-        'USER': 'agyapong',
-        'PASSWORD': 'DeadTrap1',
-        'HOST': 'agyapong.mysql.pythonanywhere-services.com',   # or IP
+        'USER': 'root',
+        'PASSWORD': '',
+        'HOST': 'localhost',   # or IP
         'PORT': '3306',        # default MySQL port
     }
 }
-
 
 
 # Password validation
@@ -160,6 +171,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "accounts.CustomUser"
 
 
-LOGIN_REDIRECT_URL = "/booking-wizard/0"   # redirect after successful login
+LOGIN_REDIRECT_URL = "dashboard"   # redirect after successful login
 LOGOUT_REDIRECT_URL = "/login/"  # redirect after logout
 LOGIN_URL = "/login/"     # if @login_required, redirect here

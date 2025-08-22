@@ -32,7 +32,7 @@ class ActivityAdmin(ImportExportModelAdmin):
     list_display = ('name','day', 'time', 'capacity','bookings_count','spots_left','allowed_grades_list')
     list_filter = ('day', 'allowed_grades')
     search_fields = ('name',)
-    filter_horizontal = ('allowed_grades','time')
+    filter_horizontal = ('allowed_grades', )
     readonly_fields = ('bookings_count','spots_left')
     actions = ['export_activities_csv']
 
