@@ -239,7 +239,7 @@ def register(request):
             profile.save()
             login(request, user)
             messages.success(request, "Registration successful!")
-            return redirect("activity_list")
+            return redirect('booking_wizard', step=0)
     else:
         user_form = CustomUserCreationForm()
         profile_form = StudentProfileForm()

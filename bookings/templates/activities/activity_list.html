@@ -3,11 +3,14 @@
 
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-3">Available Activities</h2>
-    <small style=" color: rgba(251, 0, 0, 1);">All students are required to participate in at least 3 activities weekly</small>
-    <p>You have booked {{ total_booked }} / 7 activities this week.</p>
 
+
+<div class="row">
+    <div class="col-md-12">
+    <div class="card card-success card-outline">
+        <div class="card-body">
+        <h5 class="card-title">Available Activities </h5>
+    
     {% for day_group in grouped_activities %}
         <h4 class="mt-4">{{ day_group.day }}</h4>
         {% if day_group.activities %}
@@ -61,5 +64,14 @@
             <p class="text-muted">No activities available for your grade.</p>
         {% endif %}
     {% endfor %}
+        </div>
+    </div>
+
+    
+    </div>
+    <!-- /.col-md-6 -->
 </div>
+<!-- /.row -->
+
+
 {% endblock %}

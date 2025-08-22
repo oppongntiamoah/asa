@@ -1,24 +1,25 @@
 from django.contrib import admin
-from . models import CustomUser, AllowedUser
+from django.contrib.auth.admin import UserAdmin
+from .models import CustomUser
 
-from import_export import resources
-from import_export.admin import ImportExportModelAdmin
-from .models import AllowedUser
+class CustomUserAdmin(UserAdmin):
+    model = CustomUser
+    list_display = ('email', 'is_admin', 'is_active', 'is_staff')
+    list_filter = ('is_admin', 'is_staff', 'is_active')
+    search_fields = ('email',)
+    ordering = ('email',)
 
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        ('Permissions', {'fields': ('is_admin', 'is_staff', 'is_active', 'groups', 'user_permissions')}),
+    )
 
-# Resource for import-export
-class AllowedUserResource(resources.ModelResource):
-    class Meta:
-        model = AllowedUser
-        fields = ("id", "email")   # specify which fields to import/export
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'password1', 'password2', 'is_admin', 'is_staff', 'is_active')}
+        ),
+    )
 
+admin.site.register(CustomUser, CustomUserAdmin)
 
-# Admin with import-export
-@admin.register(AllowedUser)
-class AllowedUserAdmin(ImportExportModelAdmin):
-    resource_class = AllowedUserResource
-    list_display = ("email",)
-    search_fields = ("email",)
-
-
-admin.site.register(CustomUser)
