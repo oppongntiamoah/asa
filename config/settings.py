@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-x_5pvmq*1lvc73acg7$tzo8_j)pub_#aw18o8*v_kp8^i&e$$e'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -94,28 +94,28 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # }
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'agyapong$default',
-#         'USER': 'agyapong',
-#         'PASSWORD': 'DeadTrap1',
-#         'HOST': 'agyapong.mysql.pythonanywhere-services.com',   # or IP
-#         'PORT': '3306',        # default MySQL port
-#     }
-# }
-
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'agyapong$default',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'localhost',   # or IP
+        'USER': 'agyapong',
+        'PASSWORD': 'DeadTrap1',
+        'HOST': 'agyapong.mysql.pythonanywhere-services.com',   # or IP
         'PORT': '3306',        # default MySQL port
     }
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'agyapong$default',
+#         'USER': 'root',
+#         'PASSWORD': '',
+#         'HOST': 'localhost',   # or IP
+#         'PORT': '3306',        # default MySQL port
+#     }
+# }
 
 
 # Password validation
