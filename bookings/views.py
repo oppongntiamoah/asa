@@ -63,24 +63,36 @@ def dashboard(request):
 
 
 
+from django.core.exceptions import ObjectDoesNotExist
+
 @login_required
 def activity_list(request):
-    student = StudentProfile.objects.get(user=request.user)
+    student = None
+    bookings = []
+    booked_ids = set()
+    booking_map = {}
 
-    bookings = Booking.objects.filter(student=student).select_related('activity')
-    booked_ids = set(b.activity_id for b in bookings)
-    booking_map = {b.activity_id: b for b in bookings}
+    try:
+        student = StudentProfile.objects.get(user=request.user)
+        bookings = Booking.objects.filter(student=student).select_related('activity')
+        booked_ids = set(b.activity_id for b in bookings)
+        booking_map = {b.activity_id: b for b in bookings}
+    except ObjectDoesNotExist:
+        # No student profile -> treat as admin
+        pass
 
     days = Activity.DAYS
     grouped = []
     for day_key, day_label in days:
-        activities = Activity.objects.filter(
-            day=day_key,
-            allowed_grades=student.grade
-        ).order_by('name')
+        activities_qs = Activity.objects.filter(day=day_key).order_by('name')
+
+        # If student -> filter by grade
+        if student:
+            activities_qs = activities_qs.filter(allowed_grades=student.grade)
+
         grouped.append({
             'day': day_label,
-            'activities': activities
+            'activities': activities_qs
         })
 
     total_booked = len(bookings)
@@ -92,7 +104,6 @@ def activity_list(request):
         'booked_ids': booked_ids,
         'booking_map': booking_map
     })
-
 
 
 @login_required

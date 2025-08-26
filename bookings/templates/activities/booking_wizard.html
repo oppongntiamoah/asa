@@ -34,7 +34,11 @@
                                 <td>{{ activity.time|default:"-" }}</td>
                                 <td>
                                     {% if activity.capacity == 0 %}
-                                        Unlimited
+                                        {% if activity.name == "Annual School Play" %}
+                                            Audition
+                                        {% else %}
+                                            Unlimited
+                                        {% endif %}
                                     {% else %}
                                         {{ activity.spots_left }}
                                     {% endif %}

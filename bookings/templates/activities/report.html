@@ -128,7 +128,11 @@
                             <td>{{ activity.name }}</td>
                             <td>
                             {% if activity.capacity == 0 %}
-                                Unlimited
+                                    {% if activity.name == "Annual School Play" %}
+                                        Audition
+                                    {% else %}
+                                        Unlimited
+                                    {% endif %}
                             {% else %}
                                 {{ activity.capacity }}
                             {% endif %}
