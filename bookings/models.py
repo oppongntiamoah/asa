@@ -78,7 +78,10 @@ class Booking(models.Model):
     def save(self, *args, **kwargs):
         if self.activity:
             self.day = self.activity.day
+            if self.activity.capacity != 0 and self.activity.bookings.count() >= self.activity.capacity:
+                raise ValueError(f"{self.activity} is already full.")
         super().save(*args, **kwargs)
+
     
     def can_modify(self):
         """Returns True if booking can be unbooked/changed."""

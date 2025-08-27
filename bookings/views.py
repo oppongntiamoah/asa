@@ -230,9 +230,24 @@ def booking_wizard(request, step=0):
             return redirect('booking_wizard', step=0)
 
         # Save bookings
+        # Save bookings
         for activity_id in selections.values():
             if activity_id:  # skip empty
-                Booking.objects.get_or_create(student=student, activity_id=activity_id)
+                try:
+                    activity = Activity.objects.get(pk=activity_id)
+                except Activity.DoesNotExist:
+                    continue
+
+                # Check if capacity is full
+                if activity.capacity != 0 and activity.bookings.count() >= activity.capacity:
+                    messages.error(
+                        request, 
+                        f"Sorry, {activity.name} on {activity.day} is already full."
+                    )
+                    return redirect("booking_wizard", step=0)
+
+                Booking.objects.get_or_create(student=student, activity=activity)
+
 
         messages.success(request, "Your activities have been booked successfully!")
         return redirect('activity_list')  # Or summary page
