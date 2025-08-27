@@ -29,6 +29,7 @@ class Activity(models.Model):
     class Meta:
         ordering = ['day','name']
         unique_together = ('name','day')
+        verbose_name_plural = "Activities"
 
     def __str__(self):
         return f"{self.name} ({self.day})"

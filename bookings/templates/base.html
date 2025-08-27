@@ -40,9 +40,7 @@
           <li class="nav-item">
             <a class="nav-link" href="{% url 'admin:index' %}">Admin</a>
           </li>
-          {% endif %}
-
-          {% if user.is_authenticated %}
+          {% else %}
 
           <li class="nav-item">
             <a class="nav-link" href="{% url 'my_bookings' %}">My Calendar</a>
@@ -51,6 +49,14 @@
           <li class="nav-item">
             <a class="nav-link" href="{% url 'activity_list' %}">Update Activities</a>
           </li>
+
+          {% endif %}
+
+          {% if user.is_authenticated %}
+
+          
+
+          
             
             <li class="nav-item">
               <form method="post" action="{% url 'logout' %}">
