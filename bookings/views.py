@@ -22,7 +22,7 @@ def dashboard(request):
 
     # Students by grade
     students_by_grade = (
-        StudentProfile.objects.values('grade')
+        StudentProfile.objects.values('grade__name')
         .annotate(total=Count('id'))
         .order_by('grade')
     )
