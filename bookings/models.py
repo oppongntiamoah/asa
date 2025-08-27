@@ -85,7 +85,7 @@ class Booking(models.Model):
     
     def can_modify(self):
         """Returns True if booking can be unbooked/changed."""
-        return timezone.now() - self.date_created <= timedelta(minutes=10)
+        return timezone.now() - self.date_created <= timedelta(days=100)
 
     def __str__(self):
         return f"{self.student} → {self.activity} on {self.day}"

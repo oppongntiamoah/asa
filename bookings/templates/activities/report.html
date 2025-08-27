@@ -85,7 +85,7 @@
                         <td>{{ g.name }}</td>
                         <td>{{ g.day }}</td>
                         <td>{{ g.num_bookings }} / {{ g.capacity }}</td>
-                        <td>{{ g.booking_percentage }}</td>
+                        <td>{{ g.booking_percentage|floatformat:2 }}</td>
                     </tr>
                     {% endfor %}
                 

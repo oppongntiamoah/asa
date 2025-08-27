@@ -250,7 +250,7 @@ def booking_wizard(request, step=0):
 
 
         messages.success(request, "Your activities have been booked successfully!")
-        return redirect('activity_list')  # Or summary page
+        return redirect('my_bookings')  # Or summary page
 
     day_key, day_label = days[step]
     activities = Activity.objects.filter(
@@ -298,3 +298,16 @@ def register(request):
         user_form = CustomUserCreationForm()
         profile_form = StudentProfileForm()
     return render(request, "accounts/register.html", {"user_form": user_form, "profile_form": profile_form})
+
+
+
+
+@login_required
+def my_bookings(request):
+    student = StudentProfile.objects.get(user=request.user)
+    bookings = Booking.objects.filter(student=student).select_related("activity")
+
+    return render(request, "activities/my_bookings.html", {
+        "student": student,
+        "bookings": bookings,
+    })

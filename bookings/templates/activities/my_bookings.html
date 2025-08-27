@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load tz dict_extras %}
+
+
+{% block content %}
+
+
+<div class="row">
+    <div class="col-md-12">
+    <div class="card card-success card-outline">
+        <div class="card-body">
+        <h5 class="card-title">My Booked Activities </h5><br>
+            <p><strong>Name:</strong> {{ student.name }}</p>
+            <p><strong>Grade:</strong> {{ student.grade }}</p>
+
+  {% if bookings %}
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th>Activity</th>
+          <th>Day</th>
+          <th>Time</th>
+          <th>Instructor</th>
+          <th>Venue</th>
+          <th>Date Booked</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for booking in bookings %}
+          <tr>
+            <td>{{ booking.activity.name }}</td>
+            <td>{{ booking.activity.day }}</td>
+            <td>{{ booking.activity.time }}</td>
+            <td>{{ booking.activity.instructor|default:"-" }}</td>
+            <td>{{ booking.activity.venue|default:"-" }}</td>
+            <td>{{ booking.date_created|date:"M d, Y H:i" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="alert alert-info">You have not booked any activities yet.</div>
+  {% endif %}
+</div>
+
+        </div>
+    </div>
+
+    
+    </div>
+    <!-- /.col-md-6 -->
+</div>
+<!-- /.row -->
+
+
+{% endblock %}
