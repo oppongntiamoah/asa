@@ -64,6 +64,91 @@
         <!-- TABLE: LATEST ORDERS -->
         <div class="card">
             <div class="card-header border-transparent">
+            <h3 class="card-title">Top 5 activities by percentage booked (excluding unlimited capacity)</h3>
+            </div>
+
+            <!-- /.card-header -->
+            <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table m-0">
+                <thead>
+                <tr>
+                    <th>Activity </th>
+                    <th>day </th>
+                    <th width="100px">Bookings / Capacity</th>
+                    <th>Booking %</th>
+                </tr>
+                </thead>
+                <tbody>
+                    {% for g in top_activities %}
+                    <tr>
+                        <td>{{ g.name }}</td>
+                        <td>{{ g.day }}</td>
+                        <td>{{ g.num_bookings }} / {{ g.capacity }}</td>
+                        <td>{{ g.booking_percentage }}</td>
+                    </tr>
+                    {% endfor %}
+                
+                
+                </tbody>
+                </table>
+            </div>
+            <!-- /.table-responsive -->
+            </div>
+            <!-- /.card-body -->
+        </div>
+        <!-- /.card -->
+    </div>
+    <!-- /.col -->
+
+    <div class="col-md-6">
+        <!-- TABLE: LATEST ORDERS -->
+        <div class="card">
+            <div class="card-header border-transparent">
+            <h3 class="card-title">Unlimited capacity: Top 5 bookings</h3>
+            </div>
+
+            <!-- /.card-header -->
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                    <thead>
+                <tr>
+                    <th>Activity </th>
+                    <th>day </th>
+                    <th>Bookings</th>
+                </tr>
+                </thead>
+                <tbody>
+                    {% for g in unlimited_activities %}
+                    <tr>
+                        <td>{{ g.name }}</td>
+                        <td>{{g.day}}</td>
+                        <td>{{ g.num_bookings }}</td>
+                    </tr>
+                    {% endfor %}
+                
+                
+                </tbody>
+                    </table>
+
+                </div>
+            <!-- /.table-responsive -->
+            </div>
+            <!-- /.card-body -->
+        </div>
+        <!-- /.card -->
+    </div>
+
+</div>
+
+
+<div class="row">
+    <!-- Left col -->
+    <div class="col-md-6">
+        <!-- TABLE: LATEST ORDERS -->
+        <div class="card">
+            <div class="card-header border-transparent">
             <h3 class="card-title">Students by Grade</h3>
             </div>
 
@@ -156,4 +241,8 @@
     </div>
 
 </div>
+
+
+
+
 {% endblock %}

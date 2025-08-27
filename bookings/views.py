@@ -7,7 +7,7 @@ from django.contrib.auth import login
 from .forms import CustomUserCreationForm, StudentProfileForm
 
 from .forms import DaySelectionForm
-
+from django.db.models import Count, F, FloatField, ExpressionWrapper
 
 from django.db.models import Count, Q
 
@@ -35,6 +35,32 @@ def dashboard(request):
         .order_by('day', 'name')
     )
 
+    
+
+    # Top 5 activities by percentage booked (excluding unlimited capacity)
+    top_activities = (
+        Activity.objects
+        .annotate(
+            num_bookings=Count('bookings'),
+            booking_percentage=ExpressionWrapper(
+                (F('num_bookings') * 100.0) / F('capacity'),
+                output_field=FloatField()
+            )
+        )
+        .exclude(capacity__isnull=True)        # exclude unlimited
+        .exclude(capacity=0)                   # exclude capacity=0 to avoid division by zero
+        .order_by('-booking_percentage')[:5]   # top 5
+    )
+
+    # Unlimited capacity: just rank by number of bookings
+    unlimited_activities = (
+        Activity.objects
+        .filter(capacity=0)
+        .annotate(num_bookings=Count('bookings'))
+        .order_by('-num_bookings')[:5]
+    )
+
+
     # --- New Stats ---
     # Count bookings per student
     bookings_per_student = (
@@ -58,6 +84,8 @@ def dashboard(request):
         'booked_all_7': booked_all_7,
         'booked_exactly_3': booked_exactly_3,
         'booked_between': booked_between,
+        'top_activities': top_activities,
+        'unlimited_activities': unlimited_activities,
     })
 
 
