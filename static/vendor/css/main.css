@@ -166,9 +166,10 @@ iframe {
 
 .txt2 {
   font-family: Montserrat-Regular;
-  font-size: 13px;
+  font-size: 23px;
   line-height: 1.4;
-  color: #999999;
+  color: #ff0000;
+  font-weight: bolder;
 }
 
 
@@ -236,7 +237,7 @@ iframe {
   background-position: center;
   position: relative;
   z-index: 1;
-  background-color: #0093A1;
+  background-color: #5E6B37;
 }
 
 .login100-more::before {
