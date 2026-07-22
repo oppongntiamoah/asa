@@ -15,11 +15,14 @@
     <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
             <a href="{% url 'portfolio:dashboard' %}" class="font-bold text-emerald-700 text-lg">SikaTrack</a>
-            {% if user.is_authenticated %}
-                <a href="{% url 'accounts:logout' %}" class="text-sm text-gray-500">Log out</a>
-            {% else %}
-                <a href="{% url 'accounts:login' %}" class="text-sm text-emerald-700">Log in</a>
-            {% endif %}
+            <div class="flex items-center gap-4">
+                <a href="{% url 'billing:pricing' %}" class="text-sm text-gray-500">Pricing</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'accounts:logout' %}" class="text-sm text-gray-500">Log out</a>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="text-sm text-emerald-700">Log in</a>
+                {% endif %}
+            </div>
         </div>
     </header>
 

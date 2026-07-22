@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Your credits — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-1">Your credits</h1>
+
+{% if not billing_enabled %}
+<p class="text-sm text-emerald-700 mb-6">Billing isn't switched on yet — every feature is free regardless of the balances below.</p>
+{% endif %}
+
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6 grid grid-cols-2 gap-4 text-sm">
+    <div><p class="text-gray-500">PDF processing</p><p class="font-semibold text-lg">{{ balance.pdf_processing_credits }}</p></div>
+    <div><p class="text-gray-500">Stock alerts</p><p class="font-semibold text-lg">{{ balance.stock_alert_credits }}</p></div>
+    <div><p class="text-gray-500">Dividend alerts</p><p class="font-semibold text-lg">{{ balance.dividend_alert_credits }}</p></div>
+    <div><p class="text-gray-500">Data exports</p><p class="font-semibold text-lg">{{ balance.data_export_credits }}</p></div>
+</div>
+
+<a href="{% url 'billing:pricing' %}" class="inline-block bg-emerald-600 text-white rounded-lg px-4 py-2 text-sm font-medium mb-6">Buy more credits</a>
+
+<h2 class="text-sm font-semibold mb-2">Purchase history</h2>
+<div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
+    {% for purchase in purchases %}
+    <div class="p-4 flex justify-between text-sm">
+        <div>
+            <p class="font-medium">{{ purchase.plan.name }}</p>
+            <p class="text-gray-500">{{ purchase.created_at|date:"d M Y" }}</p>
+        </div>
+        <div class="text-right">
+            <p class="font-medium">GHS {{ purchase.amount_ghs }}</p>
+            <p class="text-xs {% if purchase.status == 'SUCCESS' %}text-emerald-700{% elif purchase.status == 'FAILED' %}text-red-600{% else %}text-amber-600{% endif %}">
+                {{ purchase.get_status_display }}
+            </p>
+        </div>
+    </div>
+    {% empty %}
+    <p class="p-4 text-sm text-gray-500">No purchases yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

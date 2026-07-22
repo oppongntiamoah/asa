@@ -4,6 +4,13 @@
 <h1 class="text-xl font-bold mb-1">Upload a broker statement</h1>
 <p class="text-sm text-gray-500 mb-6">We'll read your PDF and let you confirm every transaction before anything is added to your portfolio.</p>
 
+{% if billing_enabled %}
+<p class="text-xs {% if credits_remaining > 0 %}text-gray-500{% else %}text-red-600{% endif %} mb-4">
+    {{ credits_remaining }} PDF processing credit{{ credits_remaining|pluralize }} remaining.
+    <a href="{% url 'billing:pricing' %}" class="text-emerald-700">Buy more →</a>
+</p>
+{% endif %}
+
 <form method="post" enctype="multipart/form-data" class="space-y-4 max-w-md">
     {% csrf_token %}
     {% for field in form %}

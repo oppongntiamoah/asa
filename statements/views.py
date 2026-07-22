@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django_q.tasks import async_task
 
+from billing.services import consume_credit, get_or_create_balance, has_credit, is_billing_enabled
 from portfolio.services import InsufficientHoldingError, create_transaction
 
 from .forms import ExtractedTransactionFormSet, StatementUploadForm
@@ -16,16 +17,25 @@ from .models import ExtractedTransaction, StatementUpload
 @login_required
 def upload(request):
     if request.method == "POST":
+        if not has_credit(request.user, "pdf_processing"):
+            messages.error(request, "You're out of PDF processing credits.")
+            return redirect("billing:pricing")
+
         form = StatementUploadForm(request.POST, request.FILES)
         if form.is_valid():
             statement = form.save(commit=False)
             statement.user = request.user
             statement.save()
+            consume_credit(request.user, "pdf_processing")
             async_task("statements.tasks.parse_statement", statement.id)
             return redirect("statements:status", pk=statement.pk)
     else:
         form = StatementUploadForm()
-    return render(request, "statements/upload.html", {"form": form})
+
+    context = {"form": form, "billing_enabled": is_billing_enabled()}
+    if context["billing_enabled"]:
+        context["credits_remaining"] = get_or_create_balance(request.user).pdf_processing_credits
+    return render(request, "statements/upload.html", context)
 
 
 @login_required
