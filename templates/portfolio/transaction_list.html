@@ -1,10 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Transaction history — SikaTrack{% endblock %}
 {% block content %}
-<div class="flex justify-between items-center mb-4">
-    <h1 class="text-xl font-bold">Transaction history</h1>
+<div class="flex justify-between items-center mb-1">
+    <h1 class="text-xl font-bold">Portfolio Holdings</h1>
     <a href="{% url 'portfolio:transaction_add' %}" class="text-sm text-emerald-700 font-medium">+ Add</a>
 </div>
+<p class="text-sm text-gray-500 mb-4">All buy/sell activity, most recent first.</p>
+
+{% include "portfolio/_holdings_tabs.html" with active_tab="transactions" %}
 
 {% if not transactions %}
     <p class="text-sm text-gray-500">No transactions yet.</p>

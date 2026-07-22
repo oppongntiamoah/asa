@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Performance Analysis — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-1">Performance Analysis</h1>
+<p class="text-sm text-gray-500 mb-4">Based on {{ history_days }} days of price/transaction history. Short histories give noisy numbers — treat anything based on a few weeks of data as a rough estimate, not a forecast.</p>
+
+{% if not has_series %}
+    <p class="text-sm text-gray-500">Not enough history yet — add some transactions and check back once a few days of price data have come in.</p>
+{% else %}
+
+{% if chart_svg %}
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <p class="text-sm font-semibold mb-3">Portfolio value over time</p>
+    {{ chart_svg|safe }}
+</div>
+{% endif %}
+
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">CAGR</p>
+        <p class="font-bold text-lg">{% if cagr is not None %}{{ cagr|floatformat:1 }}%{% else %}—{% endif %}</p>
+        {% if cagr is None %}<p class="text-[11px] text-gray-400">Needs 60+ days of history</p>{% endif %}
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">XIRR (money-weighted)</p>
+        <p class="font-bold text-lg">{% if xirr is not None %}{{ xirr|floatformat:1 }}%{% else %}—{% endif %}</p>
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Max drawdown</p>
+        <p class="font-bold text-lg text-red-600">{% if max_drawdown %}{{ max_drawdown.max_drawdown_pct|floatformat:1 }}%{% else %}—{% endif %}</p>
+        {% if max_drawdown %}<p class="text-[11px] text-gray-400">{{ max_drawdown.peak_date }} → {{ max_drawdown.trough_date }}</p>{% endif %}
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Volatility (annualized)</p>
+        <p class="font-bold text-lg">{% if volatility is not None %}{{ volatility|floatformat:1 }}%{% else %}—{% endif %}</p>
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Historical VaR (95%, 1-day)</p>
+        <p class="font-bold text-lg">{% if var_95 is not None %}{{ var_95|floatformat:1 }}%{% else %}—{% endif %}</p>
+        {% if var_95 is None %}<p class="text-[11px] text-gray-400">Needs more return history</p>{% endif %}
+    </div>
+</div>
+
+{% if rolling_30d %}
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <p class="text-sm font-semibold mb-3">Rolling 30-day return</p>
+    {% for d, pct in rolling_30d %}
+    <div class="flex justify-between text-sm py-1.5 border-t border-gray-100 first:border-0">
+        <span class="text-gray-500">{{ d }}</span>
+        <span class="{% if pct >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">{{ pct|floatformat:1 }}%</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if correlation_grid %}
+<div class="bg-white border border-gray-200 rounded-xl p-5">
+    <p class="text-sm font-semibold mb-1">Correlation between your holdings</p>
+    <p class="text-xs text-gray-400 mb-3">GSE trading is thin for many stocks — treat these as directional, not precise.</p>
+    <div class="overflow-x-auto">
+    <table class="text-sm">
+        <thead><tr><th class="p-2"></th>{% for t in correlation_tickers %}<th class="p-2 text-xs">{{ t }}</th>{% endfor %}</tr></thead>
+        {% for row in correlation_grid %}
+        <tr>
+            <th class="p-2 text-xs text-left">{{ row.ticker }}</th>
+            {% for cell in row.cells %}
+                <td class="p-2 text-center text-xs">{% if cell is not None %}{{ cell|floatformat:2 }}{% else %}—{% endif %}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+    </div>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

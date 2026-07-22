@@ -1,9 +1,89 @@
 {% extends "base.html" %}
-{% block title %}Dividend history — SikaTrack{% endblock %}
+{% block title %}Dividend Dashboard — SikaTrack{% endblock %}
 {% block content %}
-<h1 class="text-xl font-bold mb-1">Dividend history</h1>
-<p class="text-sm text-gray-500 mb-6">Total received: <span class="font-semibold text-emerald-700">GHS {{ total_received|floatformat:2 }}</span></p>
+<h1 class="text-xl font-bold mb-4">Dividend Dashboard</h1>
 
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Total received</p>
+        <p class="font-bold text-lg text-emerald-700">GHS {{ total_received|floatformat:2 }}</p>
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">This year</p>
+        <p class="font-bold text-lg">GHS {{ this_year|floatformat:2 }}</p>
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Portfolio yield (TTM)</p>
+        <p class="font-bold text-lg">{% if portfolio_yield_pct is not None %}{{ portfolio_yield_pct|floatformat:2 }}%{% else %}—{% endif %}</p>
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Upcoming</p>
+        <p class="font-bold text-lg">{{ upcoming|length }}</p>
+    </div>
+</div>
+
+{% if upcoming %}
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <p class="text-sm font-semibold mb-3">Upcoming dividends</p>
+    {% for d in upcoming %}
+    <div class="flex justify-between text-sm py-2 border-t border-gray-100 first:border-0">
+        <div><span class="font-medium">{{ d.instrument.ticker }}</span> <span class="text-gray-500">GHS {{ d.amount_per_share }}/share</span></div>
+        <div class="text-gray-500">ex-div {{ d.ex_dividend_date }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if per_holding_yield %}
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <p class="text-sm font-semibold mb-3">Yield by holding (trailing 12 months)</p>
+    <table class="w-full text-sm">
+        <thead><tr class="text-left text-xs text-gray-500 uppercase"><th class="py-1">Symbol</th><th class="py-1 text-right">Received</th><th class="py-1 text-right">Yield</th></tr></thead>
+        {% for row in per_holding_yield %}
+        <tr class="border-t border-gray-100">
+            <td class="py-2 font-medium">{{ row.holding.instrument.ticker }}</td>
+            <td class="py-2 text-right">GHS {{ row.trailing_12mo_received|floatformat:2 }}</td>
+            <td class="py-2 text-right">{% if row.yield_pct is not None %}{{ row.yield_pct|floatformat:2 }}%{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endif %}
+
+{% if monthly_series %}
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <p class="text-sm font-semibold mb-3">Monthly income (last 12 months)</p>
+    {% for month, amount in monthly_series %}
+        {% widthratio amount max_monthly_amount 100 as pct %}
+        <div class="flex items-center gap-3 mb-1.5">
+            <div class="w-16 text-xs text-gray-500">{{ month }}</div>
+            <div class="flex-1 bg-gray-100 rounded h-3 overflow-hidden">
+                <div class="bg-emerald-500 h-3" style="width: {{ pct|default:0 }}%"></div>
+            </div>
+            <div class="w-20 text-right text-xs">GHS {{ amount|floatformat:2 }}</div>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if annual_series %}
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <p class="text-sm font-semibold mb-3">Annual dividend growth</p>
+    {% for row in annual_series %}
+    <div class="flex justify-between text-sm py-2 border-t border-gray-100 first:border-0">
+        <div class="font-medium">{{ row.year }}</div>
+        <div>
+            GHS {{ row.amount|floatformat:2 }}
+            {% if row.growth_pct is not None %}
+                <span class="{% if row.growth_pct >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">({{ row.growth_pct|floatformat:1 }}%)</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<h2 class="text-sm font-semibold mb-2">All receipts</h2>
 {% if not receipts %}
     <p class="text-sm text-gray-500">No dividends recorded yet.</p>
 {% else %}

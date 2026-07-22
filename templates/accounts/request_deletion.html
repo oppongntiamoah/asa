@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Delete account — SikaTrack{% endblock %}
+{% block content %}
+<div class="max-w-sm mx-auto mt-8">
+    <h1 class="text-xl font-bold mb-2 text-red-700">Request account deletion</h1>
+    <p class="text-sm text-gray-500 mb-6">
+        This immediately deactivates your account and logs you out. Full data erasure is
+        handled by the SikaTrack team after — see Support for contact details.
+    </p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="w-full bg-red-600 text-white rounded-lg py-2 font-medium">Deactivate my account</button>
+        <a href="{% url 'accounts:settings' %}" class="block text-center text-sm text-gray-500 mt-3">Cancel</a>
+    </form>
+</div>
+{% endblock %}

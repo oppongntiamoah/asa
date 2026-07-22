@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Stock Breakdown — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-1">Portfolio Holdings</h1>
+<p class="text-sm text-gray-500 mb-4">Total value: GHS {{ total_value|floatformat:2 }}</p>
+
+{% include "portfolio/_holdings_tabs.html" with active_tab="breakdown" %}
+
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-4">
+    <p class="text-sm font-semibold mb-3">By stock</p>
+    {% for alloc in allocations %}
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-20 text-sm font-medium">{{ alloc.holding.instrument.ticker }}</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                <div class="bg-emerald-500 h-2" style="width: {{ alloc.pct|floatformat:0 }}%"></div>
+            </div>
+            <div class="w-16 text-right text-xs text-gray-500">{{ alloc.pct|floatformat:1 }}%</div>
+        </div>
+    {% empty %}
+        <p class="text-sm text-gray-500">No holdings yet.</p>
+    {% endfor %}
+</div>
+
+<div class="bg-white border border-gray-200 rounded-xl p-5">
+    <p class="text-sm font-semibold mb-3">By sector</p>
+    {% for s in sector_allocation %}
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-28 text-sm font-medium truncate">{{ s.sector }}</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                <div class="bg-purple-500 h-2" style="width: {{ s.pct|floatformat:0 }}%"></div>
+            </div>
+            <div class="w-16 text-right text-xs text-gray-500">{{ s.pct|floatformat:1 }}%</div>
+        </div>
+    {% empty %}
+        <p class="text-sm text-gray-500">No holdings yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

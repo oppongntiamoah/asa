@@ -18,12 +18,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_q",
+    "import_export",
     "accounts",
     "instruments",
     "portfolio",
     "dividends",
     "corporate_actions",
     "statements",
+    "billing",
+    "watchlist",
 ]
 
 MIDDLEWARE = [
@@ -107,3 +110,9 @@ Q_CLUSTER = {
 # Statement uploads: private storage served only through authenticated views,
 # never a public MEDIA_URL path. See PRODUCT_DESIGN.md §8.1.
 PRIVATE_MEDIA_ROOT = BASE_DIR / "private_media"
+
+# Paystack — one-time mobile money checkout for billing. Empty by default;
+# billing.services.is_billing_enabled() is False by default too, so a
+# missing key only matters once the founder actually switches billing on.
+PAYSTACK_SECRET_KEY = config("PAYSTACK_SECRET_KEY", default="")
+PAYSTACK_PUBLIC_KEY = config("PAYSTACK_PUBLIC_KEY", default="")

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Payment — SikaTrack{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto mt-12 text-center">
+    {% if purchase.status == "SUCCESS" %}
+        <div class="text-4xl mb-4">✅</div>
+        <p class="font-medium mb-2">Payment successful</p>
+        <p class="text-sm text-gray-500 mb-6">{{ purchase.plan.name }} credits have been added to your account.</p>
+        <a href="{% url 'billing:my_credits' %}" class="inline-block bg-emerald-600 text-white rounded-lg px-4 py-2 text-sm font-medium">View your credits</a>
+    {% elif purchase.status == "FAILED" %}
+        <div class="text-4xl mb-4">⚠️</div>
+        <p class="font-medium mb-2">Payment didn't go through</p>
+        <a href="{% url 'billing:pricing' %}" class="inline-block bg-emerald-600 text-white rounded-lg px-4 py-2 text-sm font-medium">Try again</a>
+    {% else %}
+        <div class="text-4xl mb-4">⏳</div>
+        <p class="font-medium mb-2">Confirming your payment…</p>
+        <p class="text-sm text-gray-500">This can take a moment. Refresh this page in a few seconds if it doesn't update.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Pricing — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-1">Plans</h1>
+<p class="text-sm text-gray-500 mb-6">One-time purchase — no recurring charge, no auto-renewal.</p>
+
+{% if not billing_enabled %}
+<div class="bg-emerald-50 text-emerald-800 text-sm rounded-lg px-4 py-3 mb-6">
+    Everything in SikaTrack is free while we're in early access — credits shown below aren't enforced yet.
+    Buying a plan now still works and helps support development.
+</div>
+{% endif %}
+
+<div class="grid gap-4 sm:grid-cols-3">
+    {% for plan in plans %}
+    <div class="rounded-xl border-2 p-5 flex flex-col
+        {% if plan.code == 'BASIC' %}border-blue-300 bg-blue-50
+        {% elif plan.code == 'PRO' %}border-purple-300 bg-purple-50
+        {% else %}border-amber-300 bg-amber-50{% endif %}">
+
+        <span class="self-start text-xs font-medium px-3 py-1 rounded-full mb-3 text-white
+            {% if plan.code == 'BASIC' %}bg-blue-500
+            {% elif plan.code == 'PRO' %}bg-purple-500
+            {% else %}bg-amber-500{% endif %}">
+            One-time Purchase
+        </span>
+
+        <h2 class="font-bold text-lg">{{ plan.name }}</h2>
+        <p class="text-2xl font-bold mb-4">GHS {{ plan.price_ghs|floatformat:0 }}</p>
+
+        <ul class="text-sm space-y-2 mb-6 flex-1">
+            <li class="flex gap-2"><span>✓</span> Lifetime app access</li>
+            {% if plan.pdf_processing_credits %}<li class="flex gap-2"><span>✓</span> {{ plan.pdf_processing_credits }} PDF processing credits</li>{% endif %}
+            {% if plan.stock_alert_credits %}<li class="flex gap-2"><span>✓</span> {{ plan.stock_alert_credits }} stock alerts</li>{% endif %}
+            {% if plan.dividend_alert_credits %}<li class="flex gap-2"><span>✓</span> {{ plan.dividend_alert_credits }} dividend alerts</li>{% endif %}
+            {% if plan.data_export_credits %}<li class="flex gap-2"><span>✓</span> {{ plan.data_export_credits }} data exports</li>{% endif %}
+            {% if plan.max_devices > 1 %}<li class="flex gap-2"><span>✓</span> Cross-device syncing (up to {{ plan.max_devices }} devices)</li>{% endif %}
+            {% for bullet in plan.feature_bullets %}
+                <li class="flex gap-2"><span>✓</span> {{ bullet }}</li>
+            {% endfor %}
+        </ul>
+
+        <form method="post" action="{% url 'billing:start_purchase' plan.code %}">
+            {% csrf_token %}
+            <button type="submit" class="w-full text-white rounded-lg py-2 font-medium
+                {% if plan.code == 'BASIC' %}bg-blue-600 hover:bg-blue-700
+                {% elif plan.code == 'PRO' %}bg-purple-600 hover:bg-purple-700
+                {% else %}bg-amber-600 hover:bg-amber-700{% endif %}">
+                Choose {{ plan.name }}
+            </button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+
+{% if user.is_authenticated %}
+<p class="text-sm text-center mt-6"><a href="{% url 'billing:my_credits' %}" class="text-emerald-700">View your credits & purchase history →</a></p>
+{% endif %}
+{% endblock %}

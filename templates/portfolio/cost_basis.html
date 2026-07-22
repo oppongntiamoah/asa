@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Cost Basis Analysis — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-4">Cost Basis Analysis</h1>
+
+{% if not rows %}
+    <p class="text-sm text-gray-500">No open positions yet.</p>
+{% else %}
+<div class="overflow-x-auto -mx-4 px-4">
+<table class="w-full text-sm min-w-[600px]">
+    <thead>
+        <tr class="text-left text-xs text-gray-500 uppercase">
+            <th class="py-2">Symbol</th>
+            <th class="py-2 text-right">Avg. Cost</th>
+            <th class="py-2 text-right">Break-even</th>
+            <th class="py-2 text-right">Current Price</th>
+            <th class="py-2 text-right">Gain/Share</th>
+            <th class="py-2 text-right">Gain %</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in rows %}
+        <tr class="border-t border-gray-100">
+            <td class="py-3 font-semibold">{{ r.holding.instrument.ticker }}</td>
+            <td class="py-3 text-right">GHS {{ r.average_cost|floatformat:2 }}</td>
+            <td class="py-3 text-right text-gray-500">GHS {{ r.break_even_price|floatformat:2 }}</td>
+            <td class="py-3 text-right">{% if r.current_price is not None %}GHS {{ r.current_price|floatformat:2 }}{% else %}—{% endif %}</td>
+            <td class="py-3 text-right {% if r.gain_per_share and r.gain_per_share >= 0 %}text-emerald-700{% elif r.gain_per_share %}text-red-600{% endif %}">
+                {% if r.gain_per_share is not None %}GHS {{ r.gain_per_share|floatformat:2 }}{% else %}—{% endif %}
+            </td>
+            <td class="py-3 text-right {% if r.gain_pct and r.gain_pct >= 0 %}text-emerald-700{% elif r.gain_pct %}text-red-600{% endif %}">
+                {% if r.gain_pct is not None %}{{ r.gain_pct|floatformat:2 }}%{% else %}—{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<p class="text-xs text-gray-400 mt-3">Break-even is the same as average cost — fees are already folded into the average cost calculation, so there's no separate fee adjustment to apply.</p>
+{% endif %}
+{% endblock %}
