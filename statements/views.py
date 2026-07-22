@@ -107,7 +107,12 @@ def review(request, pk):
                         statement.confirmed_at = timezone.now()
                         statement.save(update_fields=["status", "confirmed_at"])
                 except InsufficientHoldingError as exc:
-                    messages.error(request, f"Couldn't commit: {exc} Adjust the sell row or exclude it and try again.")
+                    messages.error(
+                        request,
+                        f"Couldn't commit: {exc} This can happen if an earlier purchase of this stock — e.g. "
+                        f"an IPO allocation row above that's excluded by default — needs to be completed first. "
+                        f"Complete that row, or exclude/adjust this sell, and try again.",
+                    )
                 else:
                     messages.success(request, f"{len(to_commit)} transactions added to your portfolio.")
                     return redirect("statements:confirmed", pk=statement.pk)
@@ -115,9 +120,10 @@ def review(request, pk):
         formset = ExtractedTransactionFormSet(queryset=queryset)
 
     rows_and_forms = list(zip(queryset, formset.forms))
+    included_count = sum(1 for row, _ in rows_and_forms if not row.is_excluded)
     return render(
         request, "statements/review.html",
-        {"statement": statement, "formset": formset, "rows_and_forms": rows_and_forms},
+        {"statement": statement, "formset": formset, "rows_and_forms": rows_and_forms, "included_count": included_count},
     )
 
 

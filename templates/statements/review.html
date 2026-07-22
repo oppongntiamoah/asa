@@ -2,8 +2,12 @@
 {% block title %}Review statement — SikaTrack{% endblock %}
 {% block content %}
 <h1 class="text-xl font-bold mb-1">Review your transactions</h1>
-<p class="text-sm text-gray-500 mb-6">
+<p class="text-sm text-gray-500 mb-1">
     Nothing is added to your portfolio until you confirm. Rows highlighted in yellow need a closer look.
+</p>
+<p class="text-sm text-gray-500 mb-6">
+    Rows we couldn't fully read are excluded by default — uncheck "Exclude this row" and fill in the blanks to include one anyway.
+    <span class="font-medium text-gray-700">{{ included_count }} of {{ rows_and_forms|length }}</span> rows will be imported.
 </p>
 
 <form method="post">
@@ -13,9 +17,12 @@
 
     <div class="space-y-3">
         {% for row, form in rows_and_forms %}
-        <div class="bg-white border rounded-xl p-4 {% if row.confidence == 'LOW' %}border-amber-400 bg-amber-50{% else %}border-gray-200{% endif %}">
+        <div class="bg-white border rounded-xl p-4 {% if row.confidence == 'LOW' %}border-amber-400 bg-amber-50{% else %}border-gray-200{% endif %} {% if row.is_excluded %}opacity-60{% endif %}">
             {% if row.confidence == "LOW" %}
                 <p class="text-xs text-amber-700 font-medium mb-2">Needs review{% if row.parse_notes %}: {{ row.parse_notes }}{% endif %}</p>
+            {% endif %}
+            {% if row.is_excluded %}
+                <p class="text-xs text-gray-500 font-medium mb-2">Excluded by default — won't be imported unless you uncheck below and fill in the blanks.</p>
             {% endif %}
             {% if row.raw_ticker_text %}
                 <p class="text-xs text-gray-400 mb-2">On statement: "{{ row.raw_ticker_text }}"</p>
