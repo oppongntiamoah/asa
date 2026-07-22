@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Upload statement — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-1">Upload a broker statement</h1>
+<p class="text-sm text-gray-500 mb-6">We'll read your PDF and let you confirm every transaction before anything is added to your portfolio.</p>
+
+<form method="post" enctype="multipart/form-data" class="space-y-4 max-w-md">
+    {% csrf_token %}
+    {% for field in form %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+        </div>
+    {% endfor %}
+    <p class="text-xs text-gray-400">Only IC Securities is supported today — other brokers are coming soon. You can always
+        <a href="{% url 'portfolio:transaction_add' %}" class="text-emerald-700">add transactions manually</a> in the meantime.</p>
+    <button type="submit" class="w-full bg-emerald-600 text-white rounded-lg py-2 font-medium hover:bg-emerald-700">
+        Upload
+    </button>
+</form>
+{% endblock %}

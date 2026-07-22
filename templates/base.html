@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SikaTrack{% endblock %}</title>
+    {# Tailwind Play CDN for MVP speed — swap for a compiled build (tailwindcss-cli) before production so pages aren't shipping the JIT compiler to every visitor. #}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+    <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
+    <link rel="manifest" href="{% url 'manifest' %}">
+    <meta name="theme-color" content="#059669">
+</head>
+<body class="h-full flex flex-col min-h-screen text-gray-900">
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="{% url 'portfolio:dashboard' %}" class="font-bold text-emerald-700 text-lg">SikaTrack</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'accounts:logout' %}" class="text-sm text-gray-500">Log out</a>
+            {% else %}
+                <a href="{% url 'accounts:login' %}" class="text-sm text-emerald-700">Log in</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-6 pb-24">
+        {% if messages %}
+            <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                    <div class="rounded-lg px-4 py-2 text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700{% else %}bg-emerald-50 text-emerald-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    {% if user.is_authenticated %}
+    <nav class="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-20">
+        <div class="max-w-4xl mx-auto grid grid-cols-4 text-center text-xs">
+            <a href="{% url 'portfolio:dashboard' %}" class="py-3 flex flex-col items-center gap-1 {% if request.resolver_match.url_name == 'dashboard' %}text-emerald-700{% else %}text-gray-500{% endif %}">
+                <span>🏠</span>Dashboard
+            </a>
+            <a href="{% url 'portfolio:holdings' %}" class="py-3 flex flex-col items-center gap-1 {% if request.resolver_match.url_name == 'holdings' %}text-emerald-700{% else %}text-gray-500{% endif %}">
+                <span>📊</span>Holdings
+            </a>
+            <a href="{% url 'portfolio:transaction_add' %}" class="py-3 flex flex-col items-center gap-1 {% if request.resolver_match.url_name == 'transaction_add' %}text-emerald-700{% else %}text-gray-500{% endif %}">
+                <span>➕</span>Add
+            </a>
+            <a href="{% url 'statements:upload' %}" class="py-3 flex flex-col items-center gap-1 {% if 'statements' in request.resolver_match.namespaces %}text-emerald-700{% else %}text-gray-500{% endif %}">
+                <span>📄</span>Statements
+            </a>
+        </div>
+    </nav>
+    {% endif %}
+
+    <footer class="text-center text-[11px] text-gray-400 px-4 pb-24 pt-2">
+        SikaTrack shows information based on data you provide and publicly available/announced data.
+        It is not investment advice, and SikaTrack is not a licensed investment adviser or broker under
+        Ghanaian securities law. Consult a licensed professional before making investment decisions.
+    </footer>
+</body>
+</html>

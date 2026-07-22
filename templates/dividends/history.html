@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Dividend history — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-1">Dividend history</h1>
+<p class="text-sm text-gray-500 mb-6">Total received: <span class="font-semibold text-emerald-700">GHS {{ total_received|floatformat:2 }}</span></p>
+
+{% if not receipts %}
+    <p class="text-sm text-gray-500">No dividends recorded yet.</p>
+{% else %}
+<div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
+    {% for receipt in receipts %}
+    <div class="p-4 flex justify-between text-sm">
+        <div>
+            <p class="font-medium">{{ receipt.dividend_record.instrument.ticker }}</p>
+            <p class="text-gray-500">{{ receipt.dividend_record.ex_dividend_date }} · GHS {{ receipt.dividend_record.amount_per_share }}/share × {{ receipt.quantity_held }}</p>
+        </div>
+        <div class="font-semibold text-emerald-700">GHS {{ receipt.total_amount }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

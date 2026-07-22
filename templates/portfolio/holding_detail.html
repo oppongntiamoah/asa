@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ holding.instrument.ticker }} — SikaTrack{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <h1 class="text-xl font-bold">{{ holding.instrument.ticker }}</h1>
+    <p class="text-sm text-gray-500">{{ holding.instrument.name }}</p>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6 grid grid-cols-2 gap-4 text-sm">
+    <div><p class="text-gray-500">Quantity</p><p class="font-semibold">{{ holding.quantity }}</p></div>
+    <div><p class="text-gray-500">Average cost</p><p class="font-semibold">GHS {{ holding.average_cost|floatformat:2 }}</p></div>
+    <div><p class="text-gray-500">Market value</p><p class="font-semibold">GHS {{ holding.market_value|default_if_none:"—"|floatformat:2 }}</p></div>
+    <div><p class="text-gray-500">Unrealized P&L</p><p class="font-semibold">GHS {{ holding.unrealized_pnl|default_if_none:"—"|floatformat:2 }}</p></div>
+</div>
+
+<h2 class="text-sm font-semibold mb-2">Transactions</h2>
+<div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100 mb-6">
+    {% for txn in transactions %}
+    <div class="p-4 flex justify-between text-sm">
+        <div>
+            <span class="font-medium {% if txn.transaction_type == 'BUY' %}text-emerald-700{% else %}text-red-600{% endif %}">{{ txn.transaction_type }}</span>
+            {{ txn.quantity }} @ GHS {{ txn.price_per_share }}
+        </div>
+        <div class="text-gray-500">{{ txn.trade_date }}</div>
+    </div>
+    {% empty %}
+    <p class="p-4 text-sm text-gray-500">No transactions.</p>
+    {% endfor %}
+</div>
+
+<h2 class="text-sm font-semibold mb-2">Dividend history</h2>
+<div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
+    {% for dividend in dividend_receipts %}
+        {% for receipt in dividend.receipts.all %}
+        <div class="p-4 flex justify-between text-sm">
+            <div>{{ dividend.ex_dividend_date }} — GHS {{ dividend.amount_per_share }}/share</div>
+            <div class="font-medium">GHS {{ receipt.total_amount }}</div>
+        </div>
+        {% endfor %}
+    {% empty %}
+    <p class="p-4 text-sm text-gray-500">No dividends recorded for this holding yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

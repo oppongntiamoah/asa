@@ -1,0 +1,10 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Upload daily closing price CSV</h1>
+<p>Expected columns: <code>ticker, close</code> (optionally <code>open, high, low, volume</code>).</p>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Upload" class="default">
+</form>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Statement confirmed — SikaTrack{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto mt-12 text-center">
+    <div class="text-4xl mb-4">✅</div>
+    <p class="font-medium mb-2">{{ count }} transaction{{ count|pluralize }} added to your portfolio</p>
+    <a href="{% url 'portfolio:dashboard' %}" class="inline-block bg-emerald-600 text-white rounded-lg px-4 py-2 text-sm font-medium">
+        Go to dashboard
+    </a>
+</div>
+{% endblock %}

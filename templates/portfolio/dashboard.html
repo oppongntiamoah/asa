@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — SikaTrack{% endblock %}
+{% block content %}
+
+{% if not has_any_transactions %}
+<div class="mt-4">
+    <h1 class="text-xl font-bold mb-1">Let's build your portfolio.</h1>
+    <p class="text-sm text-gray-500 mb-6">Add your GSE holdings to see real returns, dividends, and alerts in one place.</p>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+        <a href="{% url 'statements:upload' %}" class="block bg-white border border-gray-200 rounded-xl p-5 hover:border-emerald-400">
+            <div class="text-2xl mb-2">📄</div>
+            <div class="font-semibold">Upload a broker statement</div>
+            <p class="text-sm text-gray-500 mt-1">We'll read your IC Securities PDF and let you confirm each transaction.</p>
+        </a>
+        <a href="{% url 'portfolio:transaction_add' %}" class="block bg-white border border-gray-200 rounded-xl p-5 hover:border-emerald-400">
+            <div class="text-2xl mb-2">✏️</div>
+            <div class="font-semibold">Add a transaction manually</div>
+            <p class="text-sm text-gray-500 mt-1">Log a buy or sell yourself — takes about 30 seconds.</p>
+        </a>
+    </div>
+
+    <div class="mt-8 bg-emerald-50 rounded-xl p-5">
+        <p class="text-sm font-medium text-emerald-800 mb-2">What you'll get:</p>
+        <ul class="text-sm text-emerald-700 space-y-1 list-disc list-inside">
+            <li>Real portfolio value, cost basis, and P&L — not spreadsheet guesswork</li>
+            <li>Dividend income history alongside price returns</li>
+            <li>Upcoming corporate actions for stocks you actually hold</li>
+        </ul>
+    </div>
+</div>
+
+{% else %}
+<div class="space-y-6">
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <p class="text-xs text-gray-500 uppercase tracking-wide">Portfolio value</p>
+        <p class="text-3xl font-bold mt-1">GHS {{ total_value|floatformat:2 }}</p>
+        {% if has_stale_price %}
+            <p class="text-xs text-amber-600 mt-1">Some prices may be a few days old — GSE data updates once daily.</p>
+        {% endif %}
+        <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
+            <div>
+                <p class="text-gray-500">Unrealized P&L</p>
+                <p class="font-semibold {% if total_unrealized_pnl >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">
+                    GHS {{ total_unrealized_pnl|floatformat:2 }}
+                    {% if total_unrealized_pct is not None %}({{ total_unrealized_pct|floatformat:1 }}%){% endif %}
+                </p>
+            </div>
+            <div>
+                <p class="text-gray-500">Realized P&L</p>
+                <p class="font-semibold {% if total_realized_pnl >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">
+                    GHS {{ total_realized_pnl|floatformat:2 }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <p class="text-sm font-semibold mb-3">Allocation</p>
+        {% for alloc in allocations %}
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-16 text-sm font-medium">{{ alloc.holding.instrument.ticker }}</div>
+                <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                    <div class="bg-emerald-500 h-2" style="width: {{ alloc.pct|floatformat:0 }}%"></div>
+                </div>
+                <div class="w-14 text-right text-xs text-gray-500">{{ alloc.pct|floatformat:0 }}%</div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if top_movers %}
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <p class="text-sm font-semibold mb-3">Top movers among your holdings</p>
+        <table class="w-full text-sm">
+            {% for mover in top_movers %}
+            <tr class="border-t border-gray-100 first:border-0">
+                <td class="py-2 font-medium">{{ mover.instrument.ticker }}</td>
+                <td class="py-2 text-right {% if mover.change_pct >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">
+                    {{ mover.change_pct|floatformat:1 }}%
+                </td>
+                <td class="py-2 text-right text-gray-500">GHS {{ mover.close_price }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+
+    {% if upcoming_actions %}
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <p class="text-sm font-semibold mb-3">Upcoming for your holdings</p>
+        {% for action in upcoming_actions %}
+            <div class="flex justify-between text-sm py-2 border-t border-gray-100 first:border-0">
+                <div>
+                    <span class="font-medium">{{ action.instrument.ticker }}</span>
+                    <span class="text-gray-500"> — {{ action.title }}</span>
+                </div>
+                <div class="text-gray-500">{{ action.event_date }}</div>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

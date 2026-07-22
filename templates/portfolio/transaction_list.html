@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Transaction history — SikaTrack{% endblock %}
+{% block content %}
+<div class="flex justify-between items-center mb-4">
+    <h1 class="text-xl font-bold">Transaction history</h1>
+    <a href="{% url 'portfolio:transaction_add' %}" class="text-sm text-emerald-700 font-medium">+ Add</a>
+</div>
+
+{% if not transactions %}
+    <p class="text-sm text-gray-500">No transactions yet.</p>
+{% else %}
+<div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
+    {% for txn in transactions %}
+    <div class="p-4 flex justify-between items-center text-sm">
+        <div>
+            <span class="font-medium {% if txn.transaction_type == 'BUY' %}text-emerald-700{% else %}text-red-600{% endif %}">{{ txn.transaction_type }}</span>
+            {{ txn.quantity }} {{ txn.instrument.ticker }} @ GHS {{ txn.price_per_share }}
+            <span class="text-gray-400"> · {{ txn.trade_date }}</span>
+        </div>
+        <a href="{% url 'portfolio:transaction_delete' txn.pk %}" class="text-red-500 text-xs">Delete</a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

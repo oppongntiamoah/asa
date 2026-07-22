@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Reading your statement — SikaTrack{% endblock %}
+{% block content %}
+<div id="poll-container" class="max-w-md mx-auto mt-12 text-center"
+     hx-get="{% url 'statements:status' statement.pk %}"
+     hx-trigger="every 2s"
+     hx-target="#poll-container"
+     hx-swap="innerHTML">
+    {% include "statements/_status_poll.html" %}
+</div>
+{% endblock %}

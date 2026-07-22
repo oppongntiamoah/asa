@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Holdings — SikaTrack{% endblock %}
+{% block content %}
+<div class="flex justify-between items-center mb-4">
+    <h1 class="text-xl font-bold">Holdings</h1>
+    <a href="{% url 'dividends:history' %}" class="text-sm text-emerald-700">Dividend history →</a>
+</div>
+
+{% if not holdings %}
+    <p class="text-sm text-gray-500">No open positions right now.
+        <a href="{% url 'portfolio:transaction_list' %}" class="text-emerald-700">See closed positions in History</a>.
+    </p>
+{% else %}
+<div class="space-y-3">
+    {% for holding in holdings %}
+    <a href="{% url 'portfolio:holding_detail' holding.instrument.id %}" class="block bg-white border border-gray-200 rounded-xl p-4">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="font-semibold">{{ holding.instrument.ticker }}</p>
+                <p class="text-xs text-gray-500">{{ holding.quantity }} shares @ avg GHS {{ holding.average_cost|floatformat:2 }}</p>
+            </div>
+            <div class="text-right">
+                {% with value=holding.market_value pnl=holding.unrealized_pnl pct=holding.unrealized_pnl_percent %}
+                    {% if value is not None %}
+                        <p class="font-semibold">GHS {{ value|floatformat:2 }}</p>
+                        <p class="text-xs {% if pnl >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">
+                            {{ pnl|floatformat:2 }}{% if pct is not None %} ({{ pct|floatformat:1 }}%){% endif %}
+                        </p>
+                    {% else %}
+                        <p class="text-xs text-amber-600">No price yet</p>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Delete transaction — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-4">Delete this transaction?</h1>
+<div class="bg-white border border-gray-200 rounded-xl p-4 mb-6 text-sm">
+    {{ transaction.transaction_type }} {{ transaction.quantity }} {{ transaction.instrument.ticker }}
+    @ GHS {{ transaction.price_per_share }} on {{ transaction.trade_date }}
+</div>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="bg-red-600 text-white rounded-lg px-4 py-2 text-sm font-medium">Delete</button>
+    <a href="{% url 'portfolio:transaction_list' %}" class="ml-3 text-sm text-gray-500">Cancel</a>
+</form>
+{% endblock %}

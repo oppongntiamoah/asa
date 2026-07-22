@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Add transaction — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-6">Add transaction</h1>
+
+<form method="post" class="space-y-4 max-w-md">
+    {% csrf_token %}
+    {% for field in form %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+            {% if field.name == "quantity" %}
+                {{ field }}
+                <div id="sell-quantity-warning"
+                     hx-get="{% url 'portfolio:check_sell_quantity' %}"
+                     hx-trigger="blur from:#id_quantity, change from:#id_transaction_type, change from:#id_instrument"
+                     hx-include="#id_instrument,#id_transaction_type,#id_quantity"
+                     hx-target="#sell-quantity-warning"></div>
+            {% else %}
+                {{ field }}
+            {% endif %}
+            {% if field.help_text %}<p class="text-xs text-gray-400 mt-1">{{ field.help_text }}</p>{% endif %}
+            {% for error in field.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+        </div>
+    {% endfor %}
+    <button type="submit" class="w-full bg-emerald-600 text-white rounded-lg py-2 font-medium hover:bg-emerald-700">
+        Save transaction
+    </button>
+</form>
+{% endblock %}
