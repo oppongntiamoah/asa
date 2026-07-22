@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Settings — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-6">Settings</h1>
+
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <p class="text-sm font-semibold mb-4">Profile</p>
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        {% for field in form %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="bg-emerald-600 text-white rounded-lg px-4 py-2 text-sm font-medium">Save</button>
+    </form>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <p class="text-sm font-semibold mb-2">Security</p>
+    <a href="{% url 'accounts:password_change' %}" class="text-sm text-emerald-700">Change password →</a>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <p class="text-sm font-semibold mb-2">Notifications</p>
+    <p class="text-xs text-gray-400">Alert delivery isn't built yet — these preferences don't do anything yet, but are here so the layout won't need to change once alerts ship.</p>
+    <label class="flex items-center gap-2 text-sm mt-3 text-gray-400">
+        <input type="checkbox" disabled> Email me about corporate actions on my holdings
+    </label>
+    <label class="flex items-center gap-2 text-sm mt-2 text-gray-400">
+        <input type="checkbox" disabled> Email me weekly portfolio summaries
+    </label>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <p class="text-sm font-semibold mb-2">Your data</p>
+    <a href="{% url 'accounts:export_data' %}" class="text-sm text-emerald-700">Download your transactions (CSV) →</a>
+</div>
+
+<div class="bg-red-50 border border-red-200 rounded-xl p-5">
+    <p class="text-sm font-semibold text-red-700 mb-2">Danger zone</p>
+    <a href="{% url 'accounts:request_deletion' %}" class="text-sm text-red-600">Request account deletion →</a>
+</div>
+{% endblock %}

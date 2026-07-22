@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Transaction Analysis — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-4">Transaction Analysis</h1>
+
+<div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Total buys</p>
+        <p class="font-bold text-lg">{{ total_buys }}</p>
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Total sells</p>
+        <p class="font-bold text-lg">{{ total_sells }}</p>
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Avg. purchase price</p>
+        <p class="font-bold text-lg">{% if avg_purchase_price %}GHS {{ avg_purchase_price|floatformat:2 }}{% else %}—{% endif %}</p>
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Avg. holding period</p>
+        <p class="font-bold text-lg">{% if avg_holding_period_days %}{{ avg_holding_period_days|floatformat:0 }} days{% else %}—{% endif %}</p>
+    </div>
+</div>
+
+<div class="grid gap-4 sm:grid-cols-2 mb-6">
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500 mb-1">Largest purchase</p>
+        {% if largest_purchase %}
+            <p class="font-semibold">{{ largest_purchase.instrument.ticker }} — GHS {{ largest_purchase.gross_amount|floatformat:2 }}</p>
+            <p class="text-xs text-gray-400">{{ largest_purchase.quantity }} shares @ {{ largest_purchase.price_per_share }} on {{ largest_purchase.trade_date }}</p>
+        {% else %}<p class="text-sm text-gray-400">—</p>{% endif %}
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500 mb-1">Largest sale</p>
+        {% if largest_sale %}
+            <p class="font-semibold">{{ largest_sale.instrument.ticker }} — GHS {{ largest_sale.gross_amount|floatformat:2 }}</p>
+            <p class="text-xs text-gray-400">{{ largest_sale.quantity }} shares @ {{ largest_sale.price_per_share }} on {{ largest_sale.trade_date }}</p>
+        {% else %}<p class="text-sm text-gray-400">—</p>{% endif %}
+    </div>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-xl p-5">
+    <div class="flex justify-between mb-3">
+        <p class="text-sm font-semibold">Activity by month</p>
+        <p class="text-xs text-gray-500">{{ trading_frequency_per_month|floatformat:1 }} transactions/month avg</p>
+    </div>
+    <table class="w-full text-sm">
+        <thead><tr class="text-left text-xs text-gray-500 uppercase"><th class="py-1">Month</th><th class="py-1 text-right">Buys (GHS)</th><th class="py-1 text-right">Sells (GHS)</th><th class="py-1 text-right"># Txns</th></tr></thead>
+        {% for m in monthly %}
+        <tr class="border-t border-gray-100">
+            <td class="py-2">{{ m.month }}</td>
+            <td class="py-2 text-right">{{ m.buys|floatformat:2 }}</td>
+            <td class="py-2 text-right">{{ m.sells|floatformat:2 }}</td>
+            <td class="py-2 text-right">{{ m.count }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="py-3 text-gray-500">No transactions yet.</td></tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

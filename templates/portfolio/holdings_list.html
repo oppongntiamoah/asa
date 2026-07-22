@@ -1,39 +1,58 @@
 {% extends "base.html" %}
-{% block title %}Holdings — SikaTrack{% endblock %}
+{% block title %}Portfolio Holdings — SikaTrack{% endblock %}
 {% block content %}
-<div class="flex justify-between items-center mb-4">
-    <h1 class="text-xl font-bold">Holdings</h1>
-    <a href="{% url 'dividends:history' %}" class="text-sm text-emerald-700">Dividend history →</a>
+<div class="flex justify-between items-center mb-1">
+    <h1 class="text-xl font-bold">Portfolio Holdings</h1>
+    <a href="{% url 'portfolio:holdings_csv_export' %}?q={{ query }}&sort={{ sort_by }}&dir={{ direction }}"
+       class="text-xs text-emerald-700 border border-emerald-200 rounded-lg px-3 py-1.5">⬇ Export CSV</a>
 </div>
+<p class="text-sm mb-4"><a href="{% url 'dividends:history' %}" class="text-emerald-700">Dividend history →</a></p>
 
-{% if not holdings %}
-    <p class="text-sm text-gray-500">No open positions right now.
-        <a href="{% url 'portfolio:transaction_list' %}" class="text-emerald-700">See closed positions in History</a>.
+{% include "portfolio/_holdings_tabs.html" with active_tab="holdings" %}
+
+<form method="get" class="mb-4">
+    <input type="search" name="q" value="{{ query }}" placeholder="Search by symbol…"
+           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500">
+</form>
+
+{% if not rows %}
+    <p class="text-sm text-gray-500">
+        {% if query %}No holdings match "{{ query }}".{% else %}No open positions right now. <a href="{% url 'portfolio:transaction_list' %}" class="text-emerald-700">See closed positions in History</a>.{% endif %}
     </p>
 {% else %}
-<div class="space-y-3">
-    {% for holding in holdings %}
-    <a href="{% url 'portfolio:holding_detail' holding.instrument.id %}" class="block bg-white border border-gray-200 rounded-xl p-4">
-        <div class="flex justify-between items-start">
-            <div>
-                <p class="font-semibold">{{ holding.instrument.ticker }}</p>
-                <p class="text-xs text-gray-500">{{ holding.quantity }} shares @ avg GHS {{ holding.average_cost|floatformat:2 }}</p>
-            </div>
-            <div class="text-right">
-                {% with value=holding.market_value pnl=holding.unrealized_pnl pct=holding.unrealized_pnl_percent %}
-                    {% if value is not None %}
-                        <p class="font-semibold">GHS {{ value|floatformat:2 }}</p>
-                        <p class="text-xs {% if pnl >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">
-                            {{ pnl|floatformat:2 }}{% if pct is not None %} ({{ pct|floatformat:1 }}%){% endif %}
-                        </p>
-                    {% else %}
-                        <p class="text-xs text-amber-600">No price yet</p>
-                    {% endif %}
-                {% endwith %}
-            </div>
-        </div>
-    </a>
-    {% endfor %}
+<div class="overflow-x-auto -mx-4 px-4">
+<table class="w-full text-sm min-w-[720px]">
+    <thead>
+        <tr class="text-left text-xs text-gray-500 uppercase">
+            {% for key, label in sort_columns %}
+            <th class="py-2 {% if not forloop.first %}text-right{% endif %}">
+                <a href="?q={{ query }}&sort={{ key }}&dir={% if sort_by == key and direction == 'desc' %}asc{% else %}desc{% endif %}"
+                   class="{% if sort_by == key %}text-emerald-700{% endif %}">
+                    {{ label }}{% if sort_by == key %}{% if direction == 'desc' %} ↓{% else %} ↑{% endif %}{% endif %}
+                </a>
+            </th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in rows %}
+        <tr class="border-t border-gray-100">
+            <td class="py-3 font-semibold"><a href="{% url 'portfolio:holding_detail' r.instrument.id %}">{{ r.instrument.ticker }}</a></td>
+            <td class="py-3 text-right">{{ r.quantity }}</td>
+            <td class="py-3 text-right text-gray-500">GHS {{ r.avg_cost|floatformat:2 }}</td>
+            <td class="py-3 text-right font-medium">{% if r.current_price is not None %}GHS {{ r.current_price|floatformat:2 }}{% else %}—{% endif %}</td>
+            <td class="py-3 text-right text-gray-500">GHS {{ r.total_invested|floatformat:2 }}</td>
+            <td class="py-3 text-right font-semibold">{% if r.market_value is not None %}GHS {{ r.market_value|floatformat:2 }}{% else %}—{% endif %}</td>
+            <td class="py-3 text-right {% if r.gain_loss and r.gain_loss >= 0 %}text-emerald-700{% elif r.gain_loss %}text-red-600{% endif %}">
+                {% if r.gain_loss is not None %}GHS {{ r.gain_loss|floatformat:2 }}{% else %}—{% endif %}
+            </td>
+            <td class="py-3 text-right {% if r.pct_change and r.pct_change >= 0 %}text-emerald-700{% elif r.pct_change %}text-red-600{% endif %}">
+                {% if r.pct_change is not None %}{{ r.pct_change|floatformat:2 }}%{% else %}—{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 </div>
 {% endif %}
 {% endblock %}

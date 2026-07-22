@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Calendar — SikaTrack{% endblock %}
+{% block content %}
+<div class="flex justify-between items-center mb-4">
+    <a href="?year={{ prev_year }}&month={{ prev_month }}" class="text-sm text-emerald-700">← Prev</a>
+    <h1 class="text-lg font-bold">{{ month_name }} {{ year }}</h1>
+    <a href="?year={{ next_year }}&month={{ next_month }}" class="text-sm text-emerald-700">Next →</a>
+</div>
+<p class="text-xs text-gray-500 mb-4">Corporate actions & ex-dividend dates for stocks you hold or watch.</p>
+
+<div class="grid grid-cols-7 gap-1 text-center text-[11px] text-gray-500 mb-1">
+    <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+</div>
+<div class="grid grid-cols-7 gap-1 mb-6">
+    {% for week in weeks %}
+        {% for day in week %}
+            <div class="aspect-square border border-gray-100 rounded-lg p-1 text-[11px] {% if day and day in events_by_day %}bg-emerald-50 border-emerald-200{% endif %}">
+                {% if day %}
+                    <div class="font-medium">{{ day }}</div>
+                    {% if day in events_by_day %}<div class="text-emerald-700 truncate">●</div>{% endif %}
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% endfor %}
+</div>
+
+{% if upcoming %}
+<div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
+    {% for e in upcoming %}
+    <div class="p-3 flex justify-between text-sm">
+        <span>{{ e.text }}</span>
+        <span class="text-gray-500">{{ e.date }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-sm text-gray-500">No events this month for stocks you hold or watch.</p>
+{% endif %}
+{% endblock %}

@@ -2,7 +2,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from . import views
-from .forms import StyledAuthenticationForm
+from .forms import StyledAuthenticationForm, StyledPasswordChangeForm
 
 app_name = "accounts"
 
@@ -36,4 +36,22 @@ urlpatterns = [
         auth_views.PasswordResetCompleteView.as_view(template_name="accounts/password_reset_complete.html"),
         name="password_reset_complete",
     ),
+    path(
+        "password-change/",
+        auth_views.PasswordChangeView.as_view(
+            template_name="accounts/password_change.html",
+            form_class=StyledPasswordChangeForm,
+            success_url="/accounts/password-change/done/",
+        ),
+        name="password_change",
+    ),
+    path(
+        "password-change/done/",
+        auth_views.PasswordChangeDoneView.as_view(template_name="accounts/password_change_done.html"),
+        name="password_change_done",
+    ),
+    path("settings/", views.settings_view, name="settings"),
+    path("settings/export/", views.export_data, name="export_data"),
+    path("settings/delete/", views.request_deletion, name="request_deletion"),
+    path("support/", views.support, name="support"),
 ]

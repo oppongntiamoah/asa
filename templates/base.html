@@ -11,14 +11,15 @@
     <link rel="manifest" href="{% url 'manifest' %}">
     <meta name="theme-color" content="#059669">
 </head>
-<body class="h-full flex flex-col min-h-screen text-gray-900">
+<body class="h-full flex flex-col min-h-screen text-gray-900" x-data="{ menuOpen: false }">
     <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
             <a href="{% url 'portfolio:dashboard' %}" class="font-bold text-emerald-700 text-lg">SikaTrack</a>
             <div class="flex items-center gap-4">
-                <a href="{% url 'billing:pricing' %}" class="text-sm text-gray-500">Pricing</a>
+                <a href="{% url 'billing:pricing' %}" class="text-sm text-gray-500 hidden sm:inline">Pricing</a>
                 {% if user.is_authenticated %}
-                    <a href="{% url 'accounts:logout' %}" class="text-sm text-gray-500">Log out</a>
+                    <button @click="menuOpen = true" class="text-sm text-gray-500">☰ Menu</button>
+                    <a href="{% url 'accounts:logout' %}" class="text-sm text-gray-500 hidden sm:inline">Log out</a>
                 {% else %}
                     <a href="{% url 'accounts:login' %}" class="text-sm text-emerald-700">Log in</a>
                 {% endif %}
@@ -51,11 +52,51 @@
             <a href="{% url 'portfolio:transaction_add' %}" class="py-3 flex flex-col items-center gap-1 {% if request.resolver_match.url_name == 'transaction_add' %}text-emerald-700{% else %}text-gray-500{% endif %}">
                 <span>➕</span>Add
             </a>
-            <a href="{% url 'statements:upload' %}" class="py-3 flex flex-col items-center gap-1 {% if 'statements' in request.resolver_match.namespaces %}text-emerald-700{% else %}text-gray-500{% endif %}">
-                <span>📄</span>Statements
-            </a>
+            <button @click="menuOpen = true" class="py-3 flex flex-col items-center gap-1 text-gray-500">
+                <span>☰</span>Menu
+            </button>
         </div>
     </nav>
+
+    <div x-show="menuOpen" x-cloak @keydown.escape.window="menuOpen = false" class="fixed inset-0 z-30" style="display: none;">
+        <div class="absolute inset-0 bg-black/40" @click="menuOpen = false"></div>
+        <div class="absolute right-0 top-0 bottom-0 w-72 bg-white overflow-y-auto p-5" @click.outside="menuOpen = false">
+            <div class="flex justify-between items-center mb-4">
+                <p class="font-bold text-emerald-700">Menu</p>
+                <button @click="menuOpen = false" class="text-gray-400">✕</button>
+            </div>
+
+            <p class="text-xs font-semibold text-gray-400 uppercase mt-4 mb-2">Portfolio</p>
+            <a href="{% url 'portfolio:holdings' %}" class="block py-2 text-sm">Holdings</a>
+            <a href="{% url 'portfolio:transaction_list' %}" class="block py-2 text-sm">Transaction History</a>
+            <a href="{% url 'portfolio:stock_breakdown' %}" class="block py-2 text-sm">Stock Breakdown</a>
+            <a href="{% url 'statements:upload' %}" class="block py-2 text-sm">Upload Statement</a>
+            <a href="{% url 'dividends:history' %}" class="block py-2 text-sm">Dividend Dashboard</a>
+            <a href="{% url 'watchlist:watchlist' %}" class="block py-2 text-sm">Watchlist</a>
+
+            <p class="text-xs font-semibold text-gray-400 uppercase mt-4 mb-2">Analysis</p>
+            <a href="{% url 'portfolio:performance' %}" class="block py-2 text-sm">Performance</a>
+            <a href="{% url 'portfolio:transaction_analysis' %}" class="block py-2 text-sm">Transaction Analysis</a>
+            <a href="{% url 'portfolio:cost_basis' %}" class="block py-2 text-sm">Cost Basis</a>
+            <a href="{% url 'portfolio:sector_analysis' %}" class="block py-2 text-sm">Sector Analysis</a>
+            <a href="{% url 'portfolio:risk_health' %}" class="block py-2 text-sm">Risk & Health</a>
+            <a href="{% url 'portfolio:insights' %}" class="block py-2 text-sm">Insights</a>
+            <a href="{% url 'portfolio:cash_flow' %}" class="block py-2 text-sm">Cash Flow</a>
+            <a href="{% url 'portfolio:tax_summary' %}" class="block py-2 text-sm">Tax Summary</a>
+            <a href="{% url 'portfolio:timeline' %}" class="block py-2 text-sm">Timeline</a>
+
+            <p class="text-xs font-semibold text-gray-400 uppercase mt-4 mb-2">Market</p>
+            <a href="{% url 'instruments:market' %}" class="block py-2 text-sm">Market</a>
+            <a href="{% url 'corporate_actions:calendar' %}" class="block py-2 text-sm">Calendar</a>
+
+            <p class="text-xs font-semibold text-gray-400 uppercase mt-4 mb-2">Account</p>
+            <a href="{% url 'billing:pricing' %}" class="block py-2 text-sm">Pricing</a>
+            <a href="{% url 'billing:my_credits' %}" class="block py-2 text-sm">My Credits</a>
+            <a href="{% url 'accounts:settings' %}" class="block py-2 text-sm">Settings</a>
+            <a href="{% url 'accounts:support' %}" class="block py-2 text-sm">Support</a>
+            <a href="{% url 'accounts:logout' %}" class="block py-2 text-sm text-red-600">Log out</a>
+        </div>
+    </div>
     {% endif %}
 
     <footer class="text-center text-[11px] text-gray-400 px-4 pb-24 pt-2">

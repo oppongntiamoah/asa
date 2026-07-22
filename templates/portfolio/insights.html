@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Insights — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-1">Insights</h1>
+<p class="text-sm text-gray-500 mb-6">Automatically generated observations from your own data — plain rules, not an AI model.</p>
+
+{% if not insights %}
+    <p class="text-sm text-gray-500">Not enough activity yet to generate insights.</p>
+{% else %}
+<div class="space-y-3">
+    {% for text in insights %}
+    <div class="bg-white border border-gray-200 rounded-xl p-4 text-sm flex gap-3">
+        <span>💡</span>
+        <span>{{ text }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

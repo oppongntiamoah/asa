@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_q",
+    "import_export",
     "accounts",
     "instruments",
     "portfolio",
@@ -25,6 +26,7 @@ INSTALLED_APPS = [
     "corporate_actions",
     "statements",
     "billing",
+    "watchlist",
 ]
 
 MIDDLEWARE = [

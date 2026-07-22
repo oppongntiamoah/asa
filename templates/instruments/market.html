@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Market — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-1">Market</h1>
+<p class="text-sm text-gray-500 mb-4">
+    {% if latest_date %}End-of-day prices as of {{ latest_date }}.{% else %}No price data ingested yet.{% endif %}
+    GSE only publishes daily closing data — these are never live/real-time quotes.
+</p>
+
+<form method="get" class="mb-4">
+    <input type="search" name="q" value="{{ query }}" placeholder="Search by symbol…"
+           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-emerald-500">
+</form>
+
+<div class="overflow-x-auto -mx-4 px-4">
+<table class="w-full text-sm min-w-[500px]">
+    <thead><tr class="text-left text-xs text-gray-500 uppercase">
+        <th class="py-2">Symbol</th><th class="py-2">Name</th><th class="py-2 text-right">Close (as of)</th><th class="py-2 text-right">Change</th>
+    </tr></thead>
+    <tbody>
+    {% for r in rows %}
+        <tr class="border-t border-gray-100">
+            <td class="py-2 font-semibold">{{ r.instrument.ticker }}</td>
+            <td class="py-2 text-gray-500">{{ r.instrument.name }}</td>
+            <td class="py-2 text-right">{% if r.close_price is not None %}GHS {{ r.close_price|floatformat:2 }} <span class="text-gray-400 text-xs">({{ r.trade_date }})</span>{% else %}—{% endif %}</td>
+            <td class="py-2 text-right {% if r.change_pct and r.change_pct >= 0 %}text-emerald-700{% elif r.change_pct %}text-red-600{% endif %}">
+                {% if r.change_pct is not None %}{{ r.change_pct|floatformat:2 }}%{% else %}—{% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="4" class="py-3 text-gray-500">No instruments match "{{ query }}".</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

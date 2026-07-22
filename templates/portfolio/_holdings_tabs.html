@@ -1,0 +1,5 @@
+<div class="flex bg-gray-100 rounded-lg p-1 mb-4 text-sm font-medium">
+    <a href="{% url 'portfolio:holdings' %}" class="flex-1 text-center py-2 rounded-md {% if active_tab == 'holdings' %}bg-white shadow text-emerald-700{% else %}text-gray-500{% endif %}">Holdings</a>
+    <a href="{% url 'portfolio:transaction_list' %}" class="flex-1 text-center py-2 rounded-md {% if active_tab == 'transactions' %}bg-white shadow text-emerald-700{% else %}text-gray-500{% endif %}">Transaction History</a>
+    <a href="{% url 'portfolio:stock_breakdown' %}" class="flex-1 text-center py-2 rounded-md {% if active_tab == 'breakdown' %}bg-white shadow text-emerald-700{% else %}text-gray-500{% endif %}">Stock Breakdown</a>
+</div>

@@ -2,13 +2,16 @@ from django import forms
 from django.contrib import admin, messages
 from django.shortcuts import redirect, render
 from django.urls import path
+from import_export.admin import ImportExportModelAdmin
 
 from .ingest.csv_ingest import ingest_price_csv
 from .models import Instrument, PriceBar, PriceIngestBatch
+from .resources import InstrumentResource
 
 
 @admin.register(Instrument)
-class InstrumentAdmin(admin.ModelAdmin):
+class InstrumentAdmin(ImportExportModelAdmin):
+    resource_classes = [InstrumentResource]
     list_display = ("ticker", "name", "sector", "is_active", "listed_date")
     search_fields = ("ticker", "name")
     list_filter = ("sector", "is_active")

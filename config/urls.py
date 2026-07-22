@@ -24,6 +24,9 @@ urlpatterns = [
     path("dividends/", include("dividends.urls")),
     path("statements/", include("statements.urls")),
     path("billing/", include("billing.urls")),
+    path("watchlist/", include("watchlist.urls")),
+    path("calendar/", include("corporate_actions.urls")),
+    path("market/", include("instruments.urls")),
     path("", include("portfolio.urls")),
 ]
 

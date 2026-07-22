@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Risk & Health — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-4">Risk & Portfolio Health</h1>
+
+<div class="bg-white border border-gray-200 rounded-xl p-6 text-center mb-6">
+    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Portfolio Health</p>
+    {% if health_score is not None %}
+        <p class="text-4xl font-bold">{{ health_score }}<span class="text-lg text-gray-400">/100</span></p>
+    {% else %}
+        <p class="text-lg text-gray-400">Not enough data yet</p>
+    {% endif %}
+    <p class="text-xs text-gray-400 mt-2">Diversification (40%) + sector balance (30%) + returns (30%). No cash-allocation component — SikaTrack doesn't track cash balances.</p>
+</div>
+
+<div class="grid grid-cols-2 gap-4 mb-6">
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Diversification score</p>
+        <p class="font-bold text-lg">{% if diversification_score is not None %}{{ diversification_score|floatformat:0 }}/100{% else %}—{% endif %}</p>
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <p class="text-xs text-gray-500">Largest position</p>
+        {% if largest_position %}
+            <p class="font-bold text-lg">{{ largest_position.holding.instrument.ticker }} ({{ largest_position.pct|floatformat:0 }}%)</p>
+        {% else %}<p class="font-bold text-lg text-gray-400">—</p>{% endif %}
+    </div>
+</div>
+
+{% if warnings %}
+<div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+    <p class="text-sm font-semibold text-amber-800 mb-2">Concentration warnings</p>
+    {% for w in warnings %}
+        <p class="text-sm text-amber-700 py-1">⚠ {{ w }}</p>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-sm text-gray-500">No concentration warnings right now.</p>
+{% endif %}
+
+<p class="text-xs text-gray-400 mt-6">Not shown: Portfolio Beta and comparison against a benchmark index — SikaTrack doesn't have a GSE index or risk-free-rate data source hooked up yet.</p>
+{% endblock %}

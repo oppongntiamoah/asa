@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Tax Summary — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-1">Tax Summary</h1>
+<p class="text-sm text-gray-500 mb-6">Realized gains/losses by calendar year, from your sell transactions. This is not tax advice — confirm treatment (including any GSE equity exemptions) with a licensed tax professional or the Ghana Revenue Authority before filing.</p>
+
+{% if not rows %}
+    <p class="text-sm text-gray-500">No realized sales yet.</p>
+{% else %}
+<table class="w-full text-sm">
+    <thead><tr class="text-left text-xs text-gray-500 uppercase"><th class="py-1">Year</th><th class="py-1 text-right">Realized gain/loss</th></tr></thead>
+    {% for r in rows %}
+    <tr class="border-t border-gray-100">
+        <td class="py-2">{{ r.year }}</td>
+        <td class="py-2 text-right font-medium {% if r.realized_gain >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">GHS {{ r.realized_gain|floatformat:2 }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+{% endblock %}
