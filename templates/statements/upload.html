@@ -13,8 +13,8 @@
             {% for error in field.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
         </div>
     {% endfor %}
-    <p class="text-xs text-gray-400">Only IC Securities is supported today — other brokers are coming soon. You can always
-        <a href="{% url 'portfolio:transaction_add' %}" class="text-emerald-700">add transactions manually</a> in the meantime.</p>
+    <p class="text-xs text-gray-400">IC Securities and Black Star Advisors are supported today — other brokers are coming soon.
+        You can always <a href="{% url 'portfolio:transaction_add' %}" class="text-emerald-700">add transactions manually</a> in the meantime.</p>
     <button type="submit" class="w-full bg-emerald-600 text-white rounded-lg py-2 font-medium hover:bg-emerald-700">
         Upload
     </button>

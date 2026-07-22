@@ -13,7 +13,10 @@ class StatementUpload(models.Model):
         (CONFIRMED, "Confirmed"), (FAILED, "Failed"),
     ]
 
-    BROKER_CHOICES = [("IC_SECURITIES", "IC Securities")]
+    BROKER_CHOICES = [
+        ("IC_SECURITIES", "IC Securities"),
+        ("BLACKSTAR", "Black Star Advisors"),
+    ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="statement_uploads")
     broker = models.CharField(max_length=30, choices=BROKER_CHOICES)

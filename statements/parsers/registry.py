@@ -1,7 +1,9 @@
+from .blackstar import BlackstarParser
 from .ic_securities import ICSecuritiesParser
 
 PARSER_REGISTRY = {
     ICSecuritiesParser.broker_code: ICSecuritiesParser,
+    BlackstarParser.broker_code: BlackstarParser,
     # "DATABANK": DatabankParser,  # post-MVP
 }
 
