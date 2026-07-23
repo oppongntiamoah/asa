@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+  import { push } from "svelte-spa-router";
   import { api } from "../lib/api.js";
 
   let rows = $state([]);
@@ -74,9 +75,12 @@
       </thead>
       <tbody>
         {#each rows as r}
-          <tr class="border-b border-gray-100 dark:border-gray-800 last:border-0">
+          <tr
+            class="border-b border-gray-100 dark:border-gray-800 last:border-0 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50"
+            onclick={() => push(`/ticker/${r.instrument.ticker}`)}
+          >
             <td class="px-4 py-3">
-              <p class="font-medium">{r.instrument.ticker}</p>
+              <p class="font-medium text-emerald-700 dark:text-emerald-400">{r.instrument.ticker}</p>
               <p class="text-gray-500 text-xs">{r.instrument.name}</p>
             </td>
             <td class="px-4 py-3">{r.quantity.toLocaleString()}</td>

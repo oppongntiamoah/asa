@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+  import { push } from "svelte-spa-router";
   import { api } from "../lib/api.js";
 
   let data = $state(null);
@@ -76,7 +77,7 @@
       <p class="text-sm font-medium mb-3">Top gainers</p>
       {#each data.movers.gainers as m}
         <div class="flex items-center justify-between py-1.5 text-sm">
-          <span>{m.instrument.ticker}</span>
+          <button onclick={() => push(`/ticker/${m.instrument.ticker}`)} class="font-medium text-emerald-700 dark:text-emerald-400 hover:underline">{m.instrument.ticker}</button>
           <span class="text-emerald-600">{pct(m.change_pct)}</span>
         </div>
       {:else}
@@ -87,7 +88,7 @@
       <p class="text-sm font-medium mb-3">Top losers</p>
       {#each data.movers.losers as m}
         <div class="flex items-center justify-between py-1.5 text-sm">
-          <span>{m.instrument.ticker}</span>
+          <button onclick={() => push(`/ticker/${m.instrument.ticker}`)} class="font-medium text-emerald-700 dark:text-emerald-400 hover:underline">{m.instrument.ticker}</button>
           <span class="text-red-600">{pct(m.change_pct)}</span>
         </div>
       {:else}
@@ -98,7 +99,7 @@
       <p class="text-sm font-medium mb-3">Most active by volume</p>
       {#each data.movers.volume_leaders as m}
         <div class="flex items-center justify-between py-1.5 text-sm">
-          <span>{m.instrument.ticker}</span>
+          <button onclick={() => push(`/ticker/${m.instrument.ticker}`)} class="font-medium text-emerald-700 dark:text-emerald-400 hover:underline">{m.instrument.ticker}</button>
           <span class="text-gray-500">{m.volume.toLocaleString()}</span>
         </div>
       {:else}
@@ -109,7 +110,7 @@
       <p class="text-sm font-medium mb-3">Most active by value traded</p>
       {#each data.movers.value_leaders as m}
         <div class="flex items-center justify-between py-1.5 text-sm">
-          <span>{m.instrument.ticker}</span>
+          <button onclick={() => push(`/ticker/${m.instrument.ticker}`)} class="font-medium text-emerald-700 dark:text-emerald-400 hover:underline">{m.instrument.ticker}</button>
           <span class="text-gray-500">{money(m.turnover_value)}</span>
         </div>
       {:else}

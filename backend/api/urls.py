@@ -12,4 +12,6 @@ urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
     path("holdings/", views.holdings, name="holdings"),
     path("cost-basis/", views.cost_basis, name="cost_basis"),
+    path("market/summary/", views.market_summary, name="market_summary"),
+    path("market/ticker/<str:ticker>/", views.ticker_detail, name="ticker_detail"),
 ]

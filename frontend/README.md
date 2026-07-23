@@ -1,19 +1,22 @@
 # SikaTrack PWA (Svelte + Vite)
 
-The installable Progressive Web App frontend for SikaTrack, talking to the
-Django REST API in `../api/`. It shares an origin with Django (via the dev
-proxy below, or Django's own static files in production), so auth is plain
-session cookies + CSRF — no token handling.
+The complete SikaTrack frontend — public landing page and the authenticated
+portfolio app — talking to the Django REST API in `../backend/api/`. It
+shares an origin with Django (via the dev proxy below, or Django's own
+static files in production), so auth is plain session cookies + CSRF — no
+token handling.
 
 ## Development
 
 Run Django and Vite side by side:
 
 ```bash
-# Terminal 1 — from the repo root
+# Terminal 1 — from backend/
+cd backend
 pipenv run python manage.py runserver
 
 # Terminal 2 — from frontend/
+cd frontend
 npm install
 npm run dev
 ```
@@ -28,17 +31,19 @@ origin.
 npm run build
 ```
 
-Outputs to `../static/app/` (gitignored — it's a build artifact, not
-source). Django serves the built shell at `/app/` and the static assets it
+Outputs to `../backend/static/app/` (gitignored — it's a build artifact,
+not source). Django serves the built shell at `/` and the static assets it
 references from `/static/app/...` via its existing staticfiles app; no
 extra Django config is needed once the build exists. Deploys must run
 `npm run build` before `collectstatic`.
 
 ## Routing
 
-Client-side routing is hash-based (`svelte-spa-router`), e.g. `/app/#/holdings`
-— this keeps the Django side to a single `/app/` route with no wildcard
-path capture or server-side route awareness required.
+Client-side routing is hash-based (`svelte-spa-router`), e.g. `/#/holdings`
+— this keeps the Django side to a single root route with no wildcard path
+capture or server-side route awareness required. Logged-out visitors see
+the public routes (landing page, login); logged-in users see the app
+(dashboard, holdings, ticker detail, ...).
 
 ## PWA
 

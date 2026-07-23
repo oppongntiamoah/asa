@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
-/* Tailwind v4's default dark variant already follows the OS/browser
-   prefers-color-scheme setting (no dark: config or toggle needed) — this
-   matches the "auto" theme the classic Django templates use. */
+/* Dark mode is driven by the `dark` class on <html> (see lib/theme.js),
+   not just prefers-color-scheme — the sidebar has a manual light/dark/
+   system toggle, and this variant is what makes it override the OS
+   default. theme.js still defaults to "system" on first visit. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 body {
   @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100;

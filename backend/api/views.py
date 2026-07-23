@@ -8,10 +8,13 @@ boilerplate for data that was already stable and tested.
 """
 from django.contrib.auth import authenticate, login, logout
 from django.middleware.csrf import get_token
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from instruments.models import Instrument
+from instruments.services import market_snapshot, price_history
 from portfolio import analytics
 from portfolio.charts import svg_line_chart
 from portfolio.services import (
@@ -175,3 +178,48 @@ def cost_basis(request):
         }
         for r in rows
     ])
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def market_summary(request):
+    """
+    Public, portfolio-agnostic snapshot for the landing page. Explicitly
+    NOT "live" — as_of is the latest trade date SikaTrack has ingested,
+    and the response says so rather than implying real-time data.
+    """
+    snap = market_snapshot(limit=5)
+    return Response({
+        "as_of": snap["as_of"].isoformat() if snap["as_of"] else None,
+        "instrument_count": snap["instrument_count"],
+        "gainers": [_mover_dict(r) for r in snap["gainers"]],
+        "losers": [_mover_dict(r) for r in snap["losers"]],
+    })
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def ticker_detail(request, ticker):
+    instrument = get_object_or_404(Instrument, ticker__iexact=ticker)
+    bars = price_history(instrument)
+
+    latest = bars[-1] if bars else None
+    previous = bars[-2] if len(bars) > 1 else None
+    change_pct = None
+    if latest and previous and previous.close_price:
+        change_pct = float((latest.close_price - previous.close_price) / previous.close_price * 100)
+
+    return Response({
+        "instrument": _instrument_dict(instrument),
+        "latest_price": _decimal_or_none(latest.close_price) if latest else None,
+        "latest_trade_date": latest.trade_date.isoformat() if latest else None,
+        "change_pct": change_pct,
+        "history": [
+            {
+                "trade_date": bar.trade_date.isoformat(),
+                "close_price": float(bar.close_price),
+                "volume": bar.volume,
+            }
+            for bar in bars
+        ],
+    })

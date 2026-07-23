@@ -63,4 +63,6 @@ export const api = {
     return request(`/holdings/${qs ? `?${qs}` : ""}`);
   },
   costBasis: () => request("/cost-basis/"),
+  marketSummary: () => request("/market/summary/"),
+  ticker: (ticker) => request(`/market/ticker/${encodeURIComponent(ticker)}/`),
 };

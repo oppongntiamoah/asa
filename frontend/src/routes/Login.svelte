@@ -1,5 +1,5 @@
 <script>
-  import { push } from "svelte-spa-router";
+  import { push, link } from "svelte-spa-router";
   import { login, ApiError } from "../lib/auth.js";
 
   let username = $state("");
@@ -68,7 +68,7 @@
     </form>
 
     <p class="text-center text-sm text-gray-500 mt-4">
-      <a href="/accounts/login/" class="underline">Prefer the classic site?</a>
+      <a href="/" use:link class="underline">Back to home</a>
     </p>
   </div>
 </div>

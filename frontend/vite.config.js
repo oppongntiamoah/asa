@@ -5,8 +5,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // Dev: Vite serves from '/' on its own port and proxies /api to Django, so
 // the browser only ever talks to one origin (no CORS/cookie complications).
-// Build: assets are emitted under /static/app/ so Django's existing
-// staticfiles app can serve them without any extra configuration.
+// Build: assets are emitted under backend/static/app/ so Django's existing
+// staticfiles app can serve them without any extra configuration; the SPA
+// itself is served at the site root ("/"), not a sub-path, since it's the
+// whole app now (landing page + authenticated dashboard).
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/static/app/' : '/',
   plugins: [
@@ -19,8 +21,8 @@ export default defineConfig(({ command }) => ({
         name: 'SikaTrack',
         short_name: 'SikaTrack',
         description: 'Track your Ghana Stock Exchange portfolio.',
-        start_url: '/app/',
-        scope: '/app/',
+        start_url: '/',
+        scope: '/',
         display: 'standalone',
         background_color: '#f9fafb',
         theme_color: '#059669',
@@ -46,7 +48,7 @@ export default defineConfig(({ command }) => ({
     }),
   ],
   build: {
-    outDir: '../static/app',
+    outDir: '../backend/static/app',
     emptyOutDir: true,
   },
   server: {

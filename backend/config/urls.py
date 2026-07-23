@@ -44,6 +44,12 @@ urlpatterns = [
     path("market/", include("instruments.urls")),
     path("api/", include("api.urls")),
     path("app/", spa_shell, name="spa_shell"),
+    # The Svelte PWA is the primary UI now — it owns the bare root. The
+    # portfolio.urls include below still serves everything else (holdings
+    # detail, transaction forms, the analysis pages) since those haven't
+    # all been ported into the SPA yet; this only claims the exact "/"
+    # dashboard route that used to render a classic template there.
+    path("", spa_shell, name="home"),
     path("", include("portfolio.urls")),
 ]
 
