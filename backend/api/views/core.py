@@ -17,6 +17,7 @@ from instruments.models import Instrument
 from instruments.services import market_snapshot, price_history
 from portfolio import analytics
 from portfolio.charts import svg_line_chart
+from portfolio.models import Holding, Transaction
 from portfolio.services import (
     cost_basis_table,
     market_movers,
@@ -25,33 +26,9 @@ from portfolio.services import (
 )
 from portfolio.views import _holdings_rows
 
-
-def _instrument_dict(instrument):
-    return {
-        "id": instrument.id,
-        "ticker": instrument.ticker,
-        "name": instrument.name,
-        "asset_class": instrument.asset_class,
-        "sector": instrument.sector,
-    }
-
-
-def _decimal_or_none(value):
-    return None if value is None else float(value)
-
-
-def _mover_dict(row):
-    out = {"instrument": _instrument_dict(row["instrument"]), "trade_date": row["trade_date"].isoformat()}
-    if "change_pct" in row:
-        out["close_price"] = float(row["close_price"])
-        out["change_pct"] = float(row["change_pct"])
-    if "volume" in row:
-        out["volume"] = row["volume"]
-        out["close_price"] = float(row["close_price"])
-    if "turnover_value" in row:
-        out["turnover_value"] = float(row["turnover_value"])
-        out["close_price"] = float(row["close_price"])
-    return out
+from ..helpers import decimal_or_none as _decimal_or_none
+from ..helpers import instrument_dict as _instrument_dict
+from ..helpers import mover_dict as _mover_dict
 
 
 @api_view(["GET"])
@@ -209,6 +186,42 @@ def ticker_detail(request, ticker):
     if latest and previous and previous.close_price:
         change_pct = float((latest.close_price - previous.close_price) / previous.close_price * 100)
 
+    position = None
+    holding = Holding.objects.filter(user=request.user, instrument=instrument).first()
+    if holding:
+        txns = Transaction.objects.filter(user=request.user, instrument=instrument).order_by("-trade_date")
+        dividend_receipts = instrument.dividends.filter(receipts__user=request.user).prefetch_related("receipts")
+        position = {
+            "quantity": float(holding.quantity),
+            "average_cost": float(holding.average_cost),
+            "cost_basis": float(holding.cost_basis),
+            "market_value": _decimal_or_none(holding.market_value()),
+            "unrealized_pnl": _decimal_or_none(holding.unrealized_pnl()),
+            "unrealized_pnl_pct": _decimal_or_none(holding.unrealized_pnl_percent()),
+            "realized_pnl": float(holding.realized_pnl),
+            "transactions": [
+                {
+                    "id": t.id,
+                    "transaction_type": t.transaction_type,
+                    "quantity": float(t.quantity),
+                    "price_per_share": float(t.price_per_share),
+                    "fees": float(t.fees),
+                    "trade_date": t.trade_date.isoformat(),
+                    "gross_amount": float(t.gross_amount),
+                }
+                for t in txns
+            ],
+            "dividend_receipts": [
+                {
+                    "amount_per_share": float(d.amount_per_share),
+                    "ex_dividend_date": d.ex_dividend_date.isoformat(),
+                    "total_amount": float(r.total_amount),
+                }
+                for d in dividend_receipts
+                for r in d.receipts.filter(user=request.user)
+            ],
+        }
+
     return Response({
         "instrument": _instrument_dict(instrument),
         "latest_price": _decimal_or_none(latest.close_price) if latest else None,
@@ -222,4 +235,5 @@ def ticker_detail(request, ticker):
             }
             for bar in bars
         ],
+        "position": position,
     })
