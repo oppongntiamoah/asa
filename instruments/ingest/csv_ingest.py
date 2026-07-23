@@ -39,6 +39,7 @@ TICKER_HEADERS = {"share code", "ticker", "symbol"}
 OPEN_HEADERS = {"opening price (gh¢)", "opening price", "open"}
 CLOSE_HEADERS = {"closing price - vwap (gh¢)", "closing price (vwap)", "closing price", "close"}
 VOLUME_HEADERS = {"total shares traded", "volume"}
+VALUE_TRADED_HEADERS = {"total value traded (gh¢)", "total value traded", "value traded"}
 
 
 @dataclass
@@ -92,6 +93,7 @@ def _resolve_columns(fieldnames: list[str]) -> dict:
         "open": find(OPEN_HEADERS),
         "close": find(CLOSE_HEADERS),
         "volume": find(VOLUME_HEADERS),
+        "value_traded": find(VALUE_TRADED_HEADERS),
     }
 
 
@@ -156,6 +158,7 @@ def ingest_price_csv(file_obj, trade_date: date | None = None, uploaded_by=None,
                 "high_price": None,  # not present in the GSE daily export (only annual high/low is)
                 "low_price": None,
                 "volume": _parse_int(row.get(columns["volume"], "")) if columns["volume"] else None,
+                "turnover_value": _parse_decimal(row.get(columns["value_traded"], "")) if columns["value_traded"] else None,
                 "source": source,
             },
         )

@@ -56,6 +56,11 @@ class PriceBar(models.Model):
     high_price = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True)
     low_price = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True)
     volume = models.BigIntegerField(null=True, blank=True)
+    turnover_value = models.DecimalField(
+        max_digits=16, decimal_places=2, null=True, blank=True,
+        help_text="GSE's 'Total Value Traded (GH¢)' — stored directly from the "
+                   "source rather than derived (volume × close), since it's VWAP-based.",
+    )
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default="csv_upload")
     ingested_at = models.DateTimeField(auto_now_add=True)
 

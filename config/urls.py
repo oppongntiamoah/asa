@@ -27,6 +27,7 @@ urlpatterns = [
     path("watchlist/", include("watchlist.urls")),
     path("calendar/", include("corporate_actions.urls")),
     path("market/", include("instruments.urls")),
+    path("api/", include("api.urls")),
     path("", include("portfolio.urls")),
 ]
 

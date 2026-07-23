@@ -371,3 +371,53 @@ def top_movers(user, limit=5):
         })
     movers.sort(key=lambda m: abs(m["change_pct"]), reverse=True)
     return movers[:limit]
+
+
+def movers_by_volume(user, limit=5):
+    """Held instruments ranked by latest trading volume (most active),
+    highest first. Distinct from price-change movers — a stock can be
+    flat in price but have unusually high turnover."""
+    rows = []
+    for holding in Holding.objects.filter(user=user).select_related("instrument"):
+        latest = holding.instrument.price_bars.first()
+        if latest is None or latest.volume is None:
+            continue
+        rows.append({
+            "instrument": holding.instrument,
+            "volume": latest.volume,
+            "close_price": latest.close_price,
+            "trade_date": latest.trade_date,
+        })
+    rows.sort(key=lambda r: r["volume"], reverse=True)
+    return rows[:limit]
+
+
+def movers_by_value(user, limit=5):
+    """Held instruments ranked by latest turnover value (GHS traded),
+    highest first — GSE's own 'Total Value Traded' figure, not volume ×
+    close (which wouldn't match VWAP-based reporting)."""
+    rows = []
+    for holding in Holding.objects.filter(user=user).select_related("instrument"):
+        latest = holding.instrument.price_bars.first()
+        if latest is None or latest.turnover_value is None:
+            continue
+        rows.append({
+            "instrument": holding.instrument,
+            "turnover_value": latest.turnover_value,
+            "close_price": latest.close_price,
+            "trade_date": latest.trade_date,
+        })
+    rows.sort(key=lambda r: r["turnover_value"], reverse=True)
+    return rows[:limit]
+
+
+def market_movers(user, limit=5):
+    """All mover dimensions for the dashboard: price gainers/losers, most
+    active by volume, most active by value traded."""
+    wl = winners_losers(user, limit=limit)
+    return {
+        "gainers": wl["gainers"],
+        "losers": wl["losers"],
+        "volume_leaders": movers_by_volume(user, limit=limit),
+        "value_leaders": movers_by_value(user, limit=limit),
+    }
