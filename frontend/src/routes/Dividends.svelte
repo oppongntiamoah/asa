@@ -2,7 +2,8 @@
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
   import { api } from "../lib/api.js";
-  import { money, pct } from "../lib/format.js";
+  import { pct } from "../lib/format.js";
+  import Money from "../lib/Money.svelte";
 
   let data = $state(null);
   let loading = $state(true);
@@ -29,11 +30,11 @@
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
       <p class="text-xs text-gray-500 mb-1">Total received</p>
-      <p class="text-lg font-semibold">{money(data.total_received)}</p>
+      <p class="text-lg font-semibold"><Money value={data.total_received} /></p>
     </div>
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
       <p class="text-xs text-gray-500 mb-1">This year</p>
-      <p class="text-lg font-semibold">{money(data.this_year)}</p>
+      <p class="text-lg font-semibold"><Money value={data.this_year} /></p>
     </div>
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
       <p class="text-xs text-gray-500 mb-1">Portfolio yield (TTM)</p>
@@ -68,7 +69,7 @@
           {#each data.per_holding_yield as h}
             <tr class="border-b border-gray-100 dark:border-gray-800 last:border-0">
               <td class="px-4 py-3 font-medium">{h.instrument.ticker}</td>
-              <td class="px-4 py-3">{money(h.trailing_12mo_received)}</td>
+              <td class="px-4 py-3"><Money value={h.trailing_12mo_received} /></td>
               <td class="px-4 py-3">{pct(h.yield_pct)}</td>
             </tr>
           {/each}
@@ -94,8 +95,8 @@
             <tr class="border-b border-gray-100 dark:border-gray-800 last:border-0">
               <td class="px-4 py-3 font-medium">{r.instrument.ticker}</td>
               <td class="px-4 py-3">{r.ex_dividend_date}</td>
-              <td class="px-4 py-3">{r.quantity_held}</td>
-              <td class="px-4 py-3">{money(r.total_amount)}</td>
+              <td class="px-4 py-3 money-mask">{r.quantity_held}</td>
+              <td class="px-4 py-3"><Money value={r.total_amount} /></td>
             </tr>
           {/each}
         </tbody>

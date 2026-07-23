@@ -1,7 +1,8 @@
 <script>
   import { onMount } from "svelte";
   import { api } from "../../lib/api.js";
-  import { money, pct, pctColor } from "../../lib/format.js";
+  import { pct, pctColor } from "../../lib/format.js";
+  import Money from "../../lib/Money.svelte";
 
   let rows = $state([]);
   let loading = $state(true);
@@ -42,9 +43,9 @@
         {#each rows as r}
           <tr class="border-b border-gray-100 dark:border-gray-800 last:border-0">
             <td class="px-4 py-3 font-medium">{r.sector}</td>
-            <td class="px-4 py-3">{money(r.invested)}</td>
+            <td class="px-4 py-3"><Money value={r.invested} /></td>
             <td class="px-4 py-3">{r.invested_pct.toFixed(1)}%</td>
-            <td class="px-4 py-3">{money(r.value)}</td>
+            <td class="px-4 py-3"><Money value={r.value} /></td>
             <td class="px-4 py-3 {pctColor(r.return_pct)}">{pct(r.return_pct)}</td>
           </tr>
         {/each}

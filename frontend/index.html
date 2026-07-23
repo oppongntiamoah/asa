@@ -7,12 +7,14 @@
     <meta name="theme-color" content="#059669" />
     <title>SikaTrack</title>
     <script>
-      // Runs before Svelte mounts, so there's no flash of the wrong theme.
-      // Kept in sync with the toggle logic in src/lib/theme.js.
+      // Runs before Svelte mounts, so there's no flash of the wrong theme
+      // or a flash of real numbers with privacy mode on. Kept in sync with
+      // src/lib/theme.js and src/lib/privacy.js.
       (function () {
         var stored = localStorage.getItem("sikatrack-theme") || "system";
         var dark = stored === "dark" || (stored === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
         document.documentElement.classList.toggle("dark", dark);
+        document.documentElement.classList.toggle("privacy-mode", localStorage.getItem("sikatrack-privacy") === "1");
       })();
     </script>
   </head>

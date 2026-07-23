@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
   import { api } from "../lib/api.js";
+  import Money from "../lib/Money.svelte";
 
   let rows = $state([]);
   let error = $state("");
@@ -10,7 +11,6 @@
   let sort = $state("market_value");
   let dir = $state("desc");
 
-  const money = (v) => (v === null || v === undefined ? "—" : `GHS ${Number(v).toLocaleString("en-GH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
   const pct = (v) => (v === null || v === undefined ? "—" : `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`);
 
   async function load() {
@@ -83,12 +83,12 @@
               <p class="font-medium text-emerald-700 dark:text-emerald-400">{r.instrument.ticker}</p>
               <p class="text-gray-500 text-xs">{r.instrument.name}</p>
             </td>
-            <td class="px-4 py-3">{r.quantity.toLocaleString()}</td>
-            <td class="px-4 py-3">{money(r.avg_cost)}</td>
-            <td class="px-4 py-3">{money(r.current_price)}</td>
-            <td class="px-4 py-3">{money(r.market_value)}</td>
+            <td class="px-4 py-3"><span class="money-mask">{r.quantity.toLocaleString()}</span></td>
+            <td class="px-4 py-3"><Money value={r.avg_cost} /></td>
+            <td class="px-4 py-3">GHS {Number(r.current_price ?? 0).toFixed(2)}</td>
+            <td class="px-4 py-3"><Money value={r.market_value} /></td>
             <td class="px-4 py-3 {r.gain_loss >= 0 ? 'text-emerald-600' : 'text-red-600'}">
-              {money(r.gain_loss)} ({pct(r.pct_change)})
+              <Money value={r.gain_loss} /> ({pct(r.pct_change)})
             </td>
           </tr>
         {/each}

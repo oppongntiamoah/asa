@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { api } from "../../lib/api.js";
-  import { money } from "../../lib/format.js";
+  import Money from "../../lib/Money.svelte";
 
   let data = $state(null);
   let loading = $state(true);
@@ -36,7 +36,7 @@
     </div>
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
       <p class="text-xs text-gray-500 mb-1">Avg purchase price</p>
-      <p class="text-lg font-semibold">{money(data.avg_purchase_price)}</p>
+      <p class="text-lg font-semibold"><Money value={data.avg_purchase_price} /></p>
     </div>
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
       <p class="text-xs text-gray-500 mb-1">Trades/month</p>
@@ -48,18 +48,18 @@
     {#if data.largest_purchase}
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
         <p class="text-sm font-medium mb-2">Largest purchase</p>
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-          {data.largest_purchase.instrument.ticker} — {data.largest_purchase.quantity} @ {money(data.largest_purchase.price_per_share)}
-          ({money(data.largest_purchase.gross_amount)}) on {data.largest_purchase.trade_date}
+        <p class="text-sm text-gray-600 dark:text-gray-400 money-mask">
+          {data.largest_purchase.instrument.ticker} — {data.largest_purchase.quantity} @ GHS {Number(data.largest_purchase.price_per_share).toFixed(2)}
+          (GHS {Number(data.largest_purchase.gross_amount).toFixed(2)}) on {data.largest_purchase.trade_date}
         </p>
       </div>
     {/if}
     {#if data.largest_sale}
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
         <p class="text-sm font-medium mb-2">Largest sale</p>
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-          {data.largest_sale.instrument.ticker} — {data.largest_sale.quantity} @ {money(data.largest_sale.price_per_share)}
-          ({money(data.largest_sale.gross_amount)}) on {data.largest_sale.trade_date}
+        <p class="text-sm text-gray-600 dark:text-gray-400 money-mask">
+          {data.largest_sale.instrument.ticker} — {data.largest_sale.quantity} @ GHS {Number(data.largest_sale.price_per_share).toFixed(2)}
+          (GHS {Number(data.largest_sale.gross_amount).toFixed(2)}) on {data.largest_sale.trade_date}
         </p>
       </div>
     {/if}
@@ -86,8 +86,8 @@
         {#each data.monthly as m}
           <tr class="border-b border-gray-100 dark:border-gray-800 last:border-0">
             <td class="px-4 py-3">{m.month}</td>
-            <td class="px-4 py-3">{money(m.buys)}</td>
-            <td class="px-4 py-3">{money(m.sells)}</td>
+            <td class="px-4 py-3"><Money value={m.buys} /></td>
+            <td class="px-4 py-3"><Money value={m.sells} /></td>
             <td class="px-4 py-3">{m.count}</td>
           </tr>
         {/each}

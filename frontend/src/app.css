@@ -9,3 +9,31 @@
 body {
   @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
 }
+
+/* Privacy mode: masks money amounts everywhere at once via a single class
+   on <html> (see lib/privacy.js), rather than every page needing its own
+   reactive check — flip the toggle and the whole app is covered instantly,
+   no matter which screen is showing. Text is fully replaced (not just
+   blurred), since a blur can still leak digit count/shape. */
+.money-mask {
+  display: inline-block;
+}
+.privacy-mode .money-mask {
+  color: transparent;
+  position: relative;
+}
+.privacy-mode .money-mask::after {
+  /* Not currentColor — the parent's color is transparent (that's what
+     hides the real text), and currentColor on the ::after itself
+     resolves through inheritance back to that same transparent value. */
+  content: "••••••";
+  position: absolute;
+  inset: 0;
+  color: #9ca3af;
+}
+
+/* The portfolio value chart has no numeric labels, but its shape still
+   traces a wealth trend — blur it too rather than call that "hidden". */
+.privacy-mode .privacy-blur-chart svg {
+  filter: blur(8px);
+}

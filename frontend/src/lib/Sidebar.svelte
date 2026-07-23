@@ -2,6 +2,7 @@
   import { link, router } from "svelte-spa-router";
   import { user, logout } from "./auth.js";
   import { theme, cycleTheme } from "./theme.js";
+  import { privacyMode, togglePrivacy } from "./privacy.js";
 
   let { children } = $props();
 
@@ -116,6 +117,23 @@
         <span class="text-xs text-gray-400">{themeLabel[$theme]}</span>
       </button>
       <button
+        onclick={togglePrivacy}
+        class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900"
+      >
+        <span class="flex items-center gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            {#if $privacyMode}
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+            {:else}
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            {/if}
+          </svg>
+          Hide amounts
+        </span>
+        <span class="text-xs text-gray-400">{$privacyMode ? "On" : "Off"}</span>
+      </button>
+      <button
         onclick={handleLogout}
         class="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900"
       >
@@ -149,6 +167,9 @@
         {/each}
         <button onclick={cycleTheme} class="block w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-400">
           Theme: {themeLabel[$theme]}
+        </button>
+        <button onclick={togglePrivacy} class="block w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-400">
+          Hide amounts: {$privacyMode ? "On" : "Off"}
         </button>
         <button onclick={handleLogout} class="block w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-400">
           Log out

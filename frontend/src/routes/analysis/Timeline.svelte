@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { api } from "../../lib/api.js";
-  import { money } from "../../lib/format.js";
+  import Money from "../../lib/Money.svelte";
 
   let events = $state([]);
   let loading = $state(true);
@@ -38,10 +38,10 @@
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex items-center justify-between text-sm">
         <div class="flex items-center gap-3">
           <span class="text-xs font-medium px-2 py-0.5 rounded-full {kindStyle[e.kind] || 'bg-gray-100 text-gray-600'}">{e.kind}</span>
-          <span>{e.description}</span>
+          <span class="money-mask">{e.description}</span>
         </div>
         <div class="text-right">
-          <p>{money(e.amount)}</p>
+          <p><Money value={e.amount} /></p>
           <p class="text-xs text-gray-400">{e.date}</p>
         </div>
       </div>

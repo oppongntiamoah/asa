@@ -2,7 +2,8 @@
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
   import { api } from "../lib/api.js";
-  import { money, num } from "../lib/format.js";
+  import { num } from "../lib/format.js";
+  import Money from "../lib/Money.svelte";
 
   let txns = $state([]);
   let loading = $state(true);
@@ -74,10 +75,10 @@
               </span>
             </td>
             <td class="px-4 py-3 font-medium">{t.instrument.ticker}</td>
-            <td class="px-4 py-3">{num(t.quantity)}</td>
-            <td class="px-4 py-3">{money(t.price_per_share)}</td>
-            <td class="px-4 py-3">{money(t.fees)}</td>
-            <td class="px-4 py-3">{money(t.gross_amount)}</td>
+            <td class="px-4 py-3 money-mask">{num(t.quantity)}</td>
+            <td class="px-4 py-3"><Money value={t.price_per_share} /></td>
+            <td class="px-4 py-3"><Money value={t.fees} /></td>
+            <td class="px-4 py-3"><Money value={t.gross_amount} /></td>
             <td class="px-4 py-3 text-right whitespace-nowrap">
               <button onclick={() => push(`/transactions/${t.id}/edit`)} class="text-emerald-700 dark:text-emerald-400 hover:underline text-xs mr-3">Edit</button>
               <button onclick={() => remove(t.id)} disabled={deletingId === t.id} class="text-red-600 hover:underline text-xs disabled:opacity-50">

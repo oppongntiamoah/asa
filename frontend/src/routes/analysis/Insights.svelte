@@ -32,7 +32,7 @@
     {#each insights as insight}
       <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 text-sm flex items-start gap-3">
         <span class="w-6 h-6 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center text-xs shrink-0">i</span>
-        <span>{insight}</span>
+        <span class={insight.includes("GHS") ? "money-mask" : ""}>{insight}</span>
       </div>
     {/each}
   </div>

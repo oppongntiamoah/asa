@@ -3,6 +3,7 @@
   import { push } from "svelte-spa-router";
   import { api } from "../../lib/api.js";
   import { money, pct, pctColor } from "../../lib/format.js";
+  import Money from "../../lib/Money.svelte";
 
   let rows = $state([]);
   let loading = $state(true);
@@ -44,10 +45,10 @@
         {#each rows as r}
           <tr class="border-b border-gray-100 dark:border-gray-800 last:border-0 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50" onclick={() => push(`/ticker/${r.instrument.ticker}`)}>
             <td class="px-4 py-3 font-medium text-emerald-700 dark:text-emerald-400">{r.instrument.ticker}</td>
-            <td class="px-4 py-3">{money(r.average_cost)}</td>
-            <td class="px-4 py-3">{money(r.break_even_price)}</td>
+            <td class="px-4 py-3"><Money value={r.average_cost} /></td>
+            <td class="px-4 py-3"><Money value={r.break_even_price} /></td>
             <td class="px-4 py-3">{money(r.current_price)}</td>
-            <td class="px-4 py-3 {pctColor(r.gain_per_share)}">{money(r.gain_per_share)}</td>
+            <td class="px-4 py-3 {pctColor(r.gain_per_share)}"><Money value={r.gain_per_share} /></td>
             <td class="px-4 py-3 {pctColor(r.gain_pct)}">{pct(r.gain_pct)}</td>
           </tr>
         {/each}
