@@ -19,6 +19,16 @@
 </div>
 
 <div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <p class="text-sm font-semibold mb-1">Cash balance</p>
+    <p class="text-xs text-gray-400 mb-4">A simple figure you keep up to date yourself — not a transaction ledger. Counts toward your total portfolio value and allocation breakdown.</p>
+    <form method="post" action="{% url 'portfolio:update_cash_balance' %}" class="flex gap-2">
+        {% csrf_token %}
+        {{ cash_form.amount_ghs }}
+        <button type="submit" class="bg-emerald-600 text-white rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap">Save</button>
+    </form>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
     <p class="text-sm font-semibold mb-2">Security</p>
     <a href="{% url 'accounts:password_change' %}" class="text-sm text-emerald-700">Change password →</a>
 </div>

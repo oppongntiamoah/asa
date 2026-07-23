@@ -23,4 +23,5 @@ urlpatterns = [
     path("analysis/cash-flow/", views.cash_flow_view, name="cash_flow"),
     path("analysis/tax/", views.tax_summary_view, name="tax_summary"),
     path("analysis/timeline/", views.timeline_view, name="timeline"),
+    path("cash-balance/update/", views.update_cash_balance, name="update_cash_balance"),
 ]

@@ -29,6 +29,9 @@ class SignUpView(CreateView):
 
 @login_required
 def settings_view(request):
+    from portfolio.forms import CashBalanceForm
+    from portfolio.models import CashBalance
+
     if request.method == "POST":
         form = ProfileForm(request.POST, instance=request.user)
         if form.is_valid():
@@ -37,7 +40,10 @@ def settings_view(request):
             return redirect("accounts:settings")
     else:
         form = ProfileForm(instance=request.user)
-    return render(request, "accounts/settings.html", {"form": form})
+
+    cash_balance, _ = CashBalance.objects.get_or_create(user=request.user)
+    cash_form = CashBalanceForm(instance=cash_balance)
+    return render(request, "accounts/settings.html", {"form": form, "cash_form": cash_form})
 
 
 @login_required

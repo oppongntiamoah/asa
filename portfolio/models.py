@@ -79,3 +79,20 @@ class Holding(models.Model):
         if pnl is None or self.cost_basis == 0:
             return None
         return (pnl / self.cost_basis) * 100
+
+
+class CashBalance(models.Model):
+    """
+    A single manually-set number, not a transaction ledger — deliberately
+    simple. Deposits/withdrawals aren't tracked here; the user just updates
+    this figure to match their brokerage account's cash balance when it
+    changes. Counts toward total portfolio value and the asset-class
+    breakdown alongside equities/funds/fixed income.
+    """
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="cash_balance")
+    amount_ghs = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user} — GHS {self.amount_ghs}"

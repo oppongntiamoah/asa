@@ -12,9 +12,9 @@ from .resources import InstrumentResource
 @admin.register(Instrument)
 class InstrumentAdmin(ImportExportModelAdmin):
     resource_classes = [InstrumentResource]
-    list_display = ("ticker", "name", "sector", "is_active", "listed_date")
+    list_display = ("ticker", "name", "asset_class", "sector", "is_active", "listed_date")
     search_fields = ("ticker", "name")
-    list_filter = ("sector", "is_active")
+    list_filter = ("asset_class", "sector", "is_active")
 
 
 @admin.register(PriceBar)

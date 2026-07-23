@@ -7,7 +7,9 @@ from decimal import Decimal
 
 from django.db import transaction as db_transaction
 
-from .models import Holding, Transaction
+from instruments.models import Instrument
+
+from .models import CashBalance, Holding, Transaction
 
 
 class InsufficientHoldingError(ValueError):
@@ -132,8 +134,16 @@ def todays_change(user):
     return {"amount": change_amount, "pct": pct}
 
 
+def get_cash_balance(user) -> Decimal:
+    balance = CashBalance.objects.filter(user=user).first()
+    return balance.amount_ghs if balance else Decimal("0")
+
+
 def portfolio_summary(user):
-    """Aggregate figures for the dashboard header."""
+    """Aggregate figures for the dashboard header. total_value includes
+    cash — the founder's real brokerage statement showed cash as ~1.5% of
+    total portfolio value, and omitting it would make this figure
+    systematically wrong, not just incomplete."""
     holdings = Holding.objects.filter(user=user).select_related("instrument")
 
     total_value = Decimal("0")
@@ -148,7 +158,10 @@ def portfolio_summary(user):
         else:
             has_stale_price = True
 
-    total_unrealized_pnl = total_value - total_cost_basis
+    cash_balance = get_cash_balance(user)
+    total_value += cash_balance
+
+    total_unrealized_pnl = (total_value - cash_balance) - total_cost_basis
     total_unrealized_pct = (
         (total_unrealized_pnl / total_cost_basis) * 100 if total_cost_basis else None
     )
@@ -170,6 +183,7 @@ def portfolio_summary(user):
         "holdings": holdings,
         "allocations": allocations,
         "total_value": total_value,
+        "cash_balance": cash_balance,
         "total_cost_basis": total_cost_basis,
         "total_unrealized_pnl": total_unrealized_pnl,
         "total_unrealized_pct": total_unrealized_pct,
@@ -178,7 +192,40 @@ def portfolio_summary(user):
         "num_holdings": holdings.count(),
         "todays_change": todays_change(user),
         "has_stale_price": has_stale_price,
+        "asset_class_allocation": asset_class_allocation(user, total_value, holdings, cash_balance),
     }
+
+
+def asset_class_allocation(user, total_value=None, holdings=None, cash_balance=None):
+    """Breakdown matching the founder's real IC Securities Portfolio
+    Summary table: Equities / Funds / Fixed Income / Cash, by value."""
+    if holdings is None:
+        holdings = Holding.objects.filter(user=user).select_related("instrument")
+    if cash_balance is None:
+        cash_balance = get_cash_balance(user)
+
+    by_class = {code: Decimal("0") for code, _ in Instrument.ASSET_CLASS_CHOICES}
+    has_unpriced = False
+    for h in holdings:
+        value = h.market_value()
+        if value is None:
+            has_unpriced = True
+            continue
+        by_class[h.instrument.asset_class] = by_class.get(h.instrument.asset_class, Decimal("0")) + value
+    by_class["CASH"] = cash_balance
+
+    if total_value is None:
+        total_value = sum(by_class.values(), Decimal("0"))
+
+    labels = dict(Instrument.ASSET_CLASS_CHOICES)
+    labels["CASH"] = "Cash"
+    result = [
+        {"asset_class": code, "label": labels.get(code, code), "value": value,
+         "pct": (value / total_value * 100) if total_value else Decimal("0")}
+        for code, value in by_class.items()
+    ]
+    result.sort(key=lambda r: r["pct"], reverse=True)
+    return {"rows": result, "has_unpriced": has_unpriced}
 
 
 def sector_allocation(user):

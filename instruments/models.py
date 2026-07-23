@@ -3,10 +3,32 @@ from django.db import models
 
 
 class Instrument(models.Model):
-    """A GSE-listed security."""
+    """
+    A tradeable holding. Despite the app's original GSE-equities-only scope,
+    this also covers money market/liquidity funds and fixed income —
+    anything a broker statement lists as a position — because they fit the
+    exact same shape (a ticker/name, a periodic unit price, buy/sell
+    transactions against it) as an equity. Reusing Instrument/PriceBar/
+    Transaction/Holding for these means no new data model or UI was needed
+    to support them; only asset_class distinguishes them, mainly for
+    portfolio-breakdown reporting. Real bonds have coupon/maturity
+    structure this doesn't model — acceptable for now since the only real
+    fixed-income case seen so far (the founder's own IC statement) has a
+    zero balance; revisit with dedicated fields if that becomes untrue.
+    """
+
+    EQUITY = "EQUITY"
+    FUND = "FUND"
+    FIXED_INCOME = "FIXED_INCOME"
+    ASSET_CLASS_CHOICES = [
+        (EQUITY, "Equity"),
+        (FUND, "Fund"),
+        (FIXED_INCOME, "Fixed Income"),
+    ]
 
     ticker = models.CharField(max_length=12, unique=True)  # e.g. "MTNGH", "GCB", "EGL"
     name = models.CharField(max_length=255)
+    asset_class = models.CharField(max_length=20, choices=ASSET_CLASS_CHOICES, default=EQUITY)
     sector = models.CharField(max_length=100, blank=True)
     isin = models.CharField(max_length=20, blank=True)
     is_active = models.BooleanField(default=True)  # False if delisted/suspended

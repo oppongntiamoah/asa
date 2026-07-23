@@ -2,7 +2,7 @@ from django import forms
 
 from instruments.models import Instrument
 
-from .models import Transaction
+from .models import CashBalance, Transaction
 
 INPUT_CLASSES = (
     "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm "
@@ -27,4 +27,13 @@ class TransactionForm(forms.ModelForm):
             "trade_date": forms.DateInput(attrs={"class": INPUT_CLASSES, "type": "date"}),
             "broker": forms.TextInput(attrs={"class": INPUT_CLASSES}),
             "notes": forms.TextInput(attrs={"class": INPUT_CLASSES}),
+        }
+
+
+class CashBalanceForm(forms.ModelForm):
+    class Meta:
+        model = CashBalance
+        fields = ["amount_ghs"]
+        widgets = {
+            "amount_ghs": forms.NumberInput(attrs={"class": INPUT_CLASSES, "step": "0.01", "min": "0"}),
         }

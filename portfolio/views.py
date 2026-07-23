@@ -10,8 +10,8 @@ from instruments.models import Instrument
 
 from . import analytics, insights
 from .charts import svg_line_chart
-from .forms import TransactionForm
-from .models import Holding, Transaction
+from .forms import CashBalanceForm, TransactionForm
+from .models import CashBalance, Holding, Transaction
 from .services import (
     InsufficientHoldingError,
     cost_basis_table,
@@ -208,6 +208,17 @@ def tax_summary_view(request):
 @login_required
 def timeline_view(request):
     return render(request, "portfolio/timeline.html", {"events": insights.portfolio_timeline(request.user)})
+
+
+@login_required
+def update_cash_balance(request):
+    balance, _ = CashBalance.objects.get_or_create(user=request.user)
+    if request.method == "POST":
+        form = CashBalanceForm(request.POST, instance=balance)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Cash balance updated.")
+    return redirect("accounts:settings")
 
 
 @login_required
