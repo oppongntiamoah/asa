@@ -38,7 +38,7 @@
   <p class="text-gray-500">Not enough price history yet to compute performance metrics.</p>
 {:else}
   {#if data.chart_svg}
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 mb-8">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 mb-8 privacy-blur-chart">
       <p class="text-sm font-medium mb-3">Portfolio value ({data.history_days} days of history)</p>
       {@html data.chart_svg}
     </div>

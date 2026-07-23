@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
   import { api } from "../lib/api.js";
+  import Money from "../lib/Money.svelte";
 
   let data = $state(null);
   let error = $state("");
@@ -45,28 +46,28 @@
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
       <p class="text-xs text-gray-500 mb-1">Total value</p>
-      <p class="text-lg font-semibold">{money(data.total_value)}</p>
+      <p class="text-lg font-semibold"><Money value={data.total_value} /></p>
     </div>
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
       <p class="text-xs text-gray-500 mb-1">Today's change</p>
       <p class="text-lg font-semibold {data.todays_change.amount >= 0 ? 'text-emerald-600' : 'text-red-600'}">
-        {money(data.todays_change.amount)} ({pct(data.todays_change.pct)})
+        <Money value={data.todays_change.amount} /> ({pct(data.todays_change.pct)})
       </p>
     </div>
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
       <p class="text-xs text-gray-500 mb-1">Unrealized P&L</p>
       <p class="text-lg font-semibold {data.total_unrealized_pnl >= 0 ? 'text-emerald-600' : 'text-red-600'}">
-        {money(data.total_unrealized_pnl)} ({pct(data.total_unrealized_pct)})
+        <Money value={data.total_unrealized_pnl} /> ({pct(data.total_unrealized_pct)})
       </p>
     </div>
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
       <p class="text-xs text-gray-500 mb-1">Cash balance</p>
-      <p class="text-lg font-semibold">{money(data.cash_balance)}</p>
+      <p class="text-lg font-semibold"><Money value={data.cash_balance} /></p>
     </div>
   </div>
 
   {#if data.chart_svg}
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 mb-8">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 mb-8 privacy-blur-chart">
       <p class="text-sm font-medium mb-3">Portfolio value over time</p>
       {@html data.chart_svg}
     </div>
@@ -124,7 +125,7 @@
     {#each data.sector_allocation as s}
       <div class="flex items-center justify-between py-1.5 text-sm">
         <span>{s.sector}</span>
-        <span class="text-gray-500">{money(s.value)} · {s.pct.toFixed(1)}%</span>
+        <span class="text-gray-500"><Money value={s.value} /> · {s.pct.toFixed(1)}%</span>
       </div>
     {/each}
   </div>
