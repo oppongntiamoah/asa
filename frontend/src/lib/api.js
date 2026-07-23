@@ -120,4 +120,7 @@ export const api = {
 
   profile: () => request("/account/profile/"),
   updateProfile: (data) => request("/account/profile/", { method: "PATCH", body: data }),
+
+  news: (category = "") => request(`/news/${category ? `?category=${encodeURIComponent(category)}` : ""}`),
+  newsArticle: (slug) => request(`/news/${encodeURIComponent(slug)}/`),
 };

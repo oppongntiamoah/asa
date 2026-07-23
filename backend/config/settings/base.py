@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "statements",
     "billing",
     "watchlist",
+    "news",
     "api",
 ]
 

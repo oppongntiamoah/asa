@@ -8,6 +8,10 @@
   import InstallPrompt from "./lib/InstallPrompt.svelte";
   import Landing from "./routes/Landing.svelte";
   import Login from "./routes/Login.svelte";
+  import News from "./routes/News.svelte";
+  import NewsDetail from "./routes/NewsDetail.svelte";
+  import Faq from "./routes/Faq.svelte";
+  import Contact from "./routes/Contact.svelte";
   import Dashboard from "./routes/Dashboard.svelte";
   import Holdings from "./routes/Holdings.svelte";
   import Ticker from "./routes/Ticker.svelte";
@@ -47,6 +51,10 @@
   const publicRoutes = {
     "/": Landing,
     "/login": Login,
+    "/news": News,
+    "/news/:slug": NewsDetail,
+    "/faq": Faq,
+    "/contact": Contact,
   };
 
   const appRoutes = {

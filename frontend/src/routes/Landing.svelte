@@ -2,8 +2,11 @@
   import { onMount } from "svelte";
   import { link } from "svelte-spa-router";
   import { api } from "../lib/api.js";
+  import PublicHeader from "../lib/PublicHeader.svelte";
+  import PublicFooter from "../lib/PublicFooter.svelte";
 
   let snapshot = $state(null);
+  let latestNews = $state([]);
 
   onMount(async () => {
     try {
@@ -11,9 +14,16 @@
     } catch {
       snapshot = null;
     }
+    try {
+      const data = await api.news();
+      latestNews = data.articles.slice(0, 3);
+    } catch {
+      latestNews = [];
+    }
   });
 
   const pct = (v) => `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
+  const formatDate = (iso) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
   const features = [
     {
@@ -35,18 +45,7 @@
 </script>
 
 <div class="min-h-screen bg-gray-50 dark:bg-gray-950">
-  <header class="border-b border-gray-200 dark:border-gray-800">
-    <div class="max-w-6xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold">S</span>
-        <span class="font-bold text-lg">SikaTrack</span>
-      </div>
-      <div class="flex items-center gap-3">
-        <a href="/login" use:link class="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">Log in</a>
-        <a href="/accounts/signup/" class="text-sm font-medium bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700">Sign up</a>
-      </div>
-    </div>
-  </header>
+  <PublicHeader />
 
   <section class="max-w-6xl mx-auto px-4 md:px-8 py-16 md:py-24 grid md:grid-cols-2 gap-10 items-center">
     <div>
@@ -130,10 +129,34 @@
     </div>
   </section>
 
-  <footer class="border-t border-gray-200 dark:border-gray-800">
-    <div class="max-w-6xl mx-auto px-4 md:px-8 py-6 text-sm text-gray-500 flex items-center justify-between">
-      <span>© {new Date().getFullYear()} SikaTrack</span>
-      <span>Not affiliated with the Ghana Stock Exchange.</span>
-    </div>
-  </footer>
+  {#if latestNews.length > 0}
+    <section class="max-w-6xl mx-auto px-4 md:px-8 pb-20">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-semibold">Market News</h2>
+        <a href="/news" use:link class="text-sm text-emerald-700 dark:text-emerald-400 hover:underline">All news →</a>
+      </div>
+      <div class="grid md:grid-cols-3 gap-5">
+        {#each latestNews as a}
+          <a
+            href="/news/{a.slug}"
+            use:link
+            class="block bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden hover:border-emerald-300 dark:hover:border-emerald-800 transition-colors"
+          >
+            {#if a.image}
+              <img src={a.image} alt="" class="w-full h-32 object-cover" />
+            {:else}
+              <div class="w-full h-32 bg-gradient-to-br from-emerald-50 to-gray-100 dark:from-emerald-950 dark:to-gray-800"></div>
+            {/if}
+            <div class="p-4">
+              <span class="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">{a.category_display}</span>
+              <h3 class="font-semibold mt-1 mb-1 leading-snug line-clamp-2">{a.title}</h3>
+              <p class="text-xs text-gray-400">{formatDate(a.published_at)}</p>
+            </div>
+          </a>
+        {/each}
+      </div>
+    </section>
+  {/if}
+
+  <PublicFooter />
 </div>

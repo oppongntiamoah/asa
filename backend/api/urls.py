@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import account, analysis, billing, calendar, core, dividends, market, statements, transactions, watchlist
+from .views import account, analysis, billing, calendar, core, dividends, market, news, statements, transactions, watchlist
 
 app_name = "api"
 
@@ -48,4 +48,7 @@ urlpatterns = [
     path("billing/purchase/<str:plan_code>/", billing.start_purchase, name="billing_purchase"),
     # Account
     path("account/profile/", account.profile, name="account_profile"),
+    # News
+    path("news/", news.news_list, name="news_list"),
+    path("news/<slug:slug>/", news.news_detail, name="news_detail"),
 ]
