@@ -69,12 +69,16 @@ def dashboard(request):
     summary = portfolio_summary(request.user)
     has_any_transactions = Transaction.objects.filter(user=request.user).exists()
 
+    value_series = analytics.portfolio_value_series(request.user)
+    chart_series = [(d.isoformat(), float(v)) for d, v in value_series]
+
     context = {
         **summary,
         "has_any_transactions": has_any_transactions,
         "top_movers": top_movers(request.user),
         "sector_allocation": sector_allocation(request.user),
         "winners_losers": winners_losers(request.user, limit=3),
+        "chart_svg": svg_line_chart(chart_series),
         "upcoming_actions": CorporateAction.objects.filter(
             instrument__holdings__user=request.user
         ).distinct().order_by("event_date")[:5],

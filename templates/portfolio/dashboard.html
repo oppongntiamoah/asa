@@ -31,55 +31,56 @@
 </div>
 
 {% else %}
-<div class="space-y-6">
-    <div class="bg-white border border-gray-200 rounded-xl p-5">
-        <p class="text-xs text-gray-500 uppercase tracking-wide">Portfolio value</p>
-        <p class="text-3xl font-bold mt-1">GHS {{ total_value|floatformat:2 }}</p>
-        {% if has_stale_price %}
-            <p class="text-xs text-amber-600 mt-1">Some prices may be a few days old — GSE data updates once daily.</p>
-        {% endif %}
+<div class="mb-6 md:hidden">
+    <h1 class="text-xl font-bold">Welcome back, {{ user.first_name|default:user.username }}</h1>
+    <p class="text-sm text-gray-500">Here's how your portfolio is doing.</p>
+</div>
 
-        <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-            <div>
-                <p class="text-gray-500">Today's change</p>
-                {% if todays_change.amount is not None %}
-                    <p class="font-semibold {% if todays_change.amount >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">
-                        GHS {{ todays_change.amount|floatformat:2 }}
-                        {% if todays_change.pct is not None %}({{ todays_change.pct|floatformat:2 }}%){% endif %}
-                    </p>
-                {% else %}
-                    <p class="font-semibold text-gray-400">—</p>
-                {% endif %}
-            </div>
-            <div>
-                <p class="text-gray-500">Total return</p>
-                {% if total_return_pct is not None %}
-                    <p class="font-semibold {% if total_return_pct >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">{{ total_return_pct|floatformat:1 }}%</p>
-                {% else %}
-                    <p class="font-semibold text-gray-400">—</p>
-                {% endif %}
-            </div>
-            <div>
-                <p class="text-gray-500">Unrealized P&L</p>
-                <p class="font-semibold {% if total_unrealized_pnl >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">
-                    GHS {{ total_unrealized_pnl|floatformat:2 }}
-                    {% if total_unrealized_pct is not None %}({{ total_unrealized_pct|floatformat:1 }}%){% endif %}
-                </p>
-            </div>
-            <div>
-                <p class="text-gray-500">Realized P&L</p>
-                <p class="font-semibold {% if total_realized_pnl >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">
-                    GHS {{ total_realized_pnl|floatformat:2 }}
-                </p>
-            </div>
+{% if has_stale_price %}
+<p class="text-xs text-amber-600 mb-4">Some prices may be a few days old — GSE data updates once daily.</p>
+{% endif %}
+
+<div class="grid gap-4 sm:grid-cols-3 mb-6">
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <div class="flex items-center justify-between mb-4">
+            <p class="text-sm text-gray-500">Portfolio Value</p>
+            <span class="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">💼</span>
         </div>
-        <p class="text-xs text-gray-400 mt-3">{{ num_holdings }} holding{{ num_holdings|pluralize }}</p>
+        <p class="text-2xl font-bold">GHS {{ total_value|floatformat:2 }}</p>
+        {% if todays_change.amount is not None %}
+            <p class="text-xs mt-1 {% if todays_change.amount >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">
+                {% if todays_change.amount >= 0 %}+{% endif %}GHS {{ todays_change.amount|floatformat:2 }} today
+                {% if todays_change.pct is not None %}({{ todays_change.pct|floatformat:2 }}%){% endif %}
+            </p>
+        {% endif %}
     </div>
-
     <div class="bg-white border border-gray-200 rounded-xl p-5">
-        <div class="flex justify-between items-center mb-3">
-            <p class="text-sm font-semibold">Allocation</p>
-            <a href="{% url 'portfolio:holdings' %}" class="text-xs text-emerald-700">Full holdings table →</a>
+        <div class="flex items-center justify-between mb-4">
+            <p class="text-sm text-gray-500">Total Return</p>
+            <span class="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">📈</span>
+        </div>
+        {% if total_return_pct is not None %}
+            <p class="text-2xl font-bold {% if total_return_pct >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">{{ total_return_pct|floatformat:1 }}%</p>
+        {% else %}
+            <p class="text-2xl font-bold text-gray-400">—</p>
+        {% endif %}
+        <p class="text-xs text-gray-400 mt-1">Unrealized GHS {{ total_unrealized_pnl|floatformat:2 }}</p>
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <div class="flex items-center justify-between mb-4">
+            <p class="text-sm text-gray-500">Realized P&L</p>
+            <span class="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">💵</span>
+        </div>
+        <p class="text-2xl font-bold {% if total_realized_pnl >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">GHS {{ total_realized_pnl|floatformat:2 }}</p>
+        <p class="text-xs text-gray-400 mt-1">{{ num_holdings }} holding{{ num_holdings|pluralize }}</p>
+    </div>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-2 mb-6">
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <div class="flex justify-between items-center mb-4">
+            <p class="text-sm font-semibold">Portfolio Breakdown</p>
+            <a href="{% url 'portfolio:holdings' %}" class="text-xs text-emerald-700">Full table →</a>
         </div>
         {% for alloc in allocations %}
             <div class="flex items-center gap-3 mb-2">
@@ -90,11 +91,9 @@
                 <div class="w-14 text-right text-xs text-gray-500">{{ alloc.pct|floatformat:0 }}%</div>
             </div>
         {% endfor %}
-    </div>
 
-    {% if sector_allocation %}
-    <div class="bg-white border border-gray-200 rounded-xl p-5">
-        <p class="text-sm font-semibold mb-3">Sector allocation</p>
+        {% if sector_allocation %}
+        <p class="text-xs font-semibold text-gray-400 uppercase mt-5 mb-3">By sector</p>
         {% for s in sector_allocation %}
             <div class="flex items-center gap-3 mb-2">
                 <div class="w-28 text-sm font-medium truncate">{{ s.sector }}</div>
@@ -104,37 +103,65 @@
                 <div class="w-14 text-right text-xs text-gray-500">{{ s.pct|floatformat:0 }}%</div>
             </div>
         {% endfor %}
+        {% endif %}
     </div>
-    {% endif %}
 
-    {% if winners_losers.gainers or winners_losers.losers %}
-    <div class="grid gap-4 sm:grid-cols-2">
-        <div class="bg-white border border-gray-200 rounded-xl p-5">
-            <p class="text-sm font-semibold mb-3">Top gainers</p>
-            {% for mover in winners_losers.gainers %}
-                <div class="flex justify-between text-sm py-1.5 border-t border-gray-100 first:border-0">
-                    <span class="font-medium">{{ mover.instrument.ticker }}</span>
-                    <span class="text-emerald-700">+{{ mover.change_pct|floatformat:1 }}%</span>
-                </div>
-            {% empty %}
-                <p class="text-xs text-gray-400">No gainers today.</p>
-            {% endfor %}
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <div class="flex justify-between items-center mb-4">
+            <p class="text-sm font-semibold">Portfolio Growth</p>
+            <a href="{% url 'portfolio:performance' %}" class="text-xs text-emerald-700">Full analysis →</a>
         </div>
-        <div class="bg-white border border-gray-200 rounded-xl p-5">
-            <p class="text-sm font-semibold mb-3">Top losers</p>
-            {% for mover in winners_losers.losers %}
-                <div class="flex justify-between text-sm py-1.5 border-t border-gray-100 first:border-0">
-                    <span class="font-medium">{{ mover.instrument.ticker }}</span>
-                    <span class="text-red-600">{{ mover.change_pct|floatformat:1 }}%</span>
-                </div>
-            {% empty %}
-                <p class="text-xs text-gray-400">No losers today.</p>
-            {% endfor %}
-        </div>
+        {% if chart_svg %}
+            {{ chart_svg|safe }}
+        {% else %}
+            <p class="text-sm text-gray-400">Not enough price history yet to chart growth over time.</p>
+        {% endif %}
     </div>
-    {% endif %}
+</div>
 
-    {% if upcoming_actions %}
+{% if winners_losers.gainers or winners_losers.losers %}
+<div class="grid gap-4 sm:grid-cols-2 mb-6">
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <p class="text-sm font-semibold mb-3">Top gainers</p>
+        {% for mover in winners_losers.gainers %}
+            <div class="flex justify-between text-sm py-1.5 border-t border-gray-100 first:border-0">
+                <span class="font-medium">{{ mover.instrument.ticker }}</span>
+                <span class="text-emerald-700">+{{ mover.change_pct|floatformat:1 }}%</span>
+            </div>
+        {% empty %}
+            <p class="text-xs text-gray-400">No gainers today.</p>
+        {% endfor %}
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <p class="text-sm font-semibold mb-3">Top losers</p>
+        {% for mover in winners_losers.losers %}
+            <div class="flex justify-between text-sm py-1.5 border-t border-gray-100 first:border-0">
+                <span class="font-medium">{{ mover.instrument.ticker }}</span>
+                <span class="text-red-600">{{ mover.change_pct|floatformat:1 }}%</span>
+            </div>
+        {% empty %}
+            <p class="text-xs text-gray-400">No losers today.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="grid gap-4 lg:grid-cols-2">
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <div class="flex justify-between items-center mb-3">
+            <p class="text-sm font-semibold">My Investment Assets</p>
+            <a href="{% url 'portfolio:holdings' %}" class="text-xs text-emerald-700">See all →</a>
+        </div>
+        {% for holding in holdings|slice:":5" %}
+            <a href="{% url 'portfolio:holding_detail' holding.instrument.id %}" class="flex justify-between text-sm py-2 border-t border-gray-100 first:border-0">
+                <span class="font-medium">{{ holding.instrument.ticker }}</span>
+                <span class="text-gray-500">{{ holding.quantity }} shares</span>
+            </a>
+        {% empty %}
+            <p class="text-sm text-gray-400">No open positions.</p>
+        {% endfor %}
+    </div>
+
     <div class="bg-white border border-gray-200 rounded-xl p-5">
         <div class="flex justify-between items-center mb-3">
             <p class="text-sm font-semibold">Upcoming for your holdings</p>
@@ -148,9 +175,10 @@
                 </div>
                 <div class="text-gray-500">{{ action.event_date }}</div>
             </div>
+        {% empty %}
+            <p class="text-sm text-gray-400">Nothing coming up.</p>
         {% endfor %}
     </div>
-    {% endif %}
 </div>
 {% endif %}
 {% endblock %}
