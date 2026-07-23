@@ -4,6 +4,7 @@
   import { user, checkAuth } from "./lib/auth.js";
   import { api } from "./lib/api.js";
   import Sidebar from "./lib/Sidebar.svelte";
+  import InstallPrompt from "./lib/InstallPrompt.svelte";
   import Login from "./routes/Login.svelte";
   import Dashboard from "./routes/Dashboard.svelte";
   import Holdings from "./routes/Holdings.svelte";
@@ -30,4 +31,5 @@
   <Sidebar>
     <Router {routes} />
   </Sidebar>
+  <InstallPrompt />
 {/if}
