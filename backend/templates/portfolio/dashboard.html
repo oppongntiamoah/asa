@@ -46,10 +46,10 @@
             <p class="text-sm text-gray-500">Portfolio Value</p>
             <span class="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">💼</span>
         </div>
-        <p class="text-2xl font-bold">GHS {{ total_value|floatformat:2 }}</p>
+        <p class="text-2xl font-bold money-mask">GHS {{ total_value|floatformat:2 }}</p>
         {% if todays_change.amount is not None %}
             <p class="text-xs mt-1 {% if todays_change.amount >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">
-                {% if todays_change.amount >= 0 %}+{% endif %}GHS {{ todays_change.amount|floatformat:2 }} today
+                <span class="money-mask">{% if todays_change.amount >= 0 %}+{% endif %}GHS {{ todays_change.amount|floatformat:2 }}</span> today
                 {% if todays_change.pct is not None %}({{ todays_change.pct|floatformat:2 }}%){% endif %}
             </p>
         {% endif %}
@@ -64,21 +64,21 @@
         {% else %}
             <p class="text-2xl font-bold text-gray-400">—</p>
         {% endif %}
-        <p class="text-xs text-gray-400 mt-1">Unrealized GHS {{ total_unrealized_pnl|floatformat:2 }}</p>
+        <p class="text-xs text-gray-400 mt-1 money-mask">Unrealized GHS {{ total_unrealized_pnl|floatformat:2 }}</p>
     </div>
     <div class="bg-white border border-gray-200 rounded-xl p-5">
         <div class="flex items-center justify-between mb-4">
             <p class="text-sm text-gray-500">Realized P&L</p>
             <span class="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">💵</span>
         </div>
-        <p class="text-2xl font-bold {% if total_realized_pnl >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">GHS {{ total_realized_pnl|floatformat:2 }}</p>
+        <p class="text-2xl font-bold money-mask {% if total_realized_pnl >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">GHS {{ total_realized_pnl|floatformat:2 }}</p>
         <p class="text-xs text-gray-400 mt-1">{{ num_holdings }} holding{{ num_holdings|pluralize }}</p>
     </div>
 </div>
 
 <div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
     <div class="flex justify-between items-center mb-4">
-        <p class="text-sm font-semibold">Portfolio Summary — GHS {{ total_value|floatformat:2 }} total</p>
+        <p class="text-sm font-semibold">Portfolio Summary — <span class="money-mask">GHS {{ total_value|floatformat:2 }}</span> total</p>
         <a href="{% url 'accounts:settings' %}" class="text-xs text-emerald-700">Update cash →</a>
     </div>
     <table class="w-full text-sm">
@@ -87,7 +87,7 @@
             {% for row in asset_class_allocation.rows %}
             <tr class="border-t border-gray-100">
                 <td class="py-2">{{ row.label }}</td>
-                <td class="py-2 text-right">{{ row.value|floatformat:2 }}</td>
+                <td class="py-2 text-right money-mask">{{ row.value|floatformat:2 }}</td>
                 <td class="py-2 text-right">{{ row.pct|floatformat:1 }}%</td>
             </tr>
             {% endfor %}
@@ -134,7 +134,7 @@
             <a href="{% url 'portfolio:performance' %}" class="text-xs text-emerald-700">Full analysis →</a>
         </div>
         {% if chart_svg %}
-            {{ chart_svg|safe }}
+            <div class="privacy-blur-chart">{{ chart_svg|safe }}</div>
         {% else %}
             <p class="text-sm text-gray-400">Not enough price history yet to chart growth over time.</p>
         {% endif %}
@@ -177,7 +177,7 @@
         {% for holding in holdings|slice:":5" %}
             <a href="{% url 'portfolio:holding_detail' holding.instrument.id %}" class="flex justify-between text-sm py-2 border-t border-gray-100 first:border-0">
                 <span class="font-medium">{{ holding.instrument.ticker }}</span>
-                <span class="text-gray-500">{{ holding.quantity }} shares</span>
+                <span class="text-gray-500 money-mask">{{ holding.quantity }} shares</span>
             </a>
         {% empty %}
             <p class="text-sm text-gray-400">No open positions.</p>

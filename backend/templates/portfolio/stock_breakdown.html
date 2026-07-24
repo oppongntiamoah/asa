@@ -2,7 +2,7 @@
 {% block title %}Stock Breakdown — SikaTrack{% endblock %}
 {% block content %}
 <h1 class="text-xl font-bold mb-1">Portfolio Holdings</h1>
-<p class="text-sm text-gray-500 mb-4">Total value: GHS {{ total_value|floatformat:2 }}</p>
+<p class="text-sm text-gray-500 mb-4">Total value: <span class="money-mask">GHS {{ total_value|floatformat:2 }}</span></p>
 
 {% include "portfolio/_holdings_tabs.html" with active_tab="breakdown" %}
 

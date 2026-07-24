@@ -3,8 +3,8 @@
 {% block content %}
 <h1 class="text-xl font-bold mb-4">Delete this transaction?</h1>
 <div class="bg-white border border-gray-200 rounded-xl p-4 mb-6 text-sm">
-    {{ transaction.transaction_type }} {{ transaction.quantity }} {{ transaction.instrument.ticker }}
-    @ GHS {{ transaction.price_per_share }} on {{ transaction.trade_date }}
+    <span class="money-mask">{{ transaction.transaction_type }} {{ transaction.quantity }} {{ transaction.instrument.ticker }}
+    @ GHS {{ transaction.price_per_share }}</span> on {{ transaction.trade_date }}
 </div>
 <form method="post">
     {% csrf_token %}

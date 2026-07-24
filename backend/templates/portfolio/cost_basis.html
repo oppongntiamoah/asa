@@ -22,10 +22,10 @@
         {% for r in rows %}
         <tr class="border-t border-gray-100">
             <td class="py-3 font-semibold">{{ r.holding.instrument.ticker }}</td>
-            <td class="py-3 text-right">GHS {{ r.average_cost|floatformat:2 }}</td>
-            <td class="py-3 text-right text-gray-500">GHS {{ r.break_even_price|floatformat:2 }}</td>
+            <td class="py-3 text-right money-mask">GHS {{ r.average_cost|floatformat:2 }}</td>
+            <td class="py-3 text-right text-gray-500 money-mask">GHS {{ r.break_even_price|floatformat:2 }}</td>
             <td class="py-3 text-right">{% if r.current_price is not None %}GHS {{ r.current_price|floatformat:2 }}{% else %}—{% endif %}</td>
-            <td class="py-3 text-right {% if r.gain_per_share and r.gain_per_share >= 0 %}text-emerald-700{% elif r.gain_per_share %}text-red-600{% endif %}">
+            <td class="py-3 text-right money-mask {% if r.gain_per_share and r.gain_per_share >= 0 %}text-emerald-700{% elif r.gain_per_share %}text-red-600{% endif %}">
                 {% if r.gain_per_share is not None %}GHS {{ r.gain_per_share|floatformat:2 }}{% else %}—{% endif %}
             </td>
             <td class="py-3 text-right {% if r.gain_pct and r.gain_pct >= 0 %}text-emerald-700{% elif r.gain_pct %}text-red-600{% endif %}">

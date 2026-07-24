@@ -10,44 +10,90 @@
     <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
     <link rel="manifest" href="{% url 'manifest' %}">
     <meta name="theme-color" content="#059669">
+    <script>
+        // Runs before first paint (before Tailwind/Alpine even load), so
+        // there's no flash of the wrong theme or a flash of real numbers
+        // with privacy mode on. Kept in sync with the Alpine store below,
+        // which handles the toggle buttons after the page has loaded.
+        (function () {
+            var theme = localStorage.getItem("sikatrack-theme") || "system";
+            var dark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+            document.documentElement.classList.toggle("dark", dark);
+            document.documentElement.classList.toggle("privacy-mode", localStorage.getItem("sikatrack-privacy") === "1");
+        })();
+    </script>
     <style>
-        /* Auto dark theme — follows the OS/browser preference (prefers-color-scheme),
-           no manual toggle. Existing templates consistently use a small vocabulary of
-           Tailwind utilities (bg-white, border-gray-200, text-gray-500, etc.), so this
-           block remaps that vocabulary for dark mode instead of hand-editing every
-           template — a pragmatic tradeoff of the Play-CDN setup; a compiled Tailwind
-           build with real `dark:` variants would be the cleaner long-term version. */
-        @media (prefers-color-scheme: dark) {
-            html, body { background-color: #0a0a0a; }
-            body { color: #e5e5e5; }
-            .bg-white { background-color: #141414 !important; }
-            .bg-gray-50 { background-color: #0a0a0a !important; }
-            .bg-gray-100 { background-color: #1f1f1f !important; }
-            .border-gray-100 { border-color: #262626 !important; }
-            .border-gray-200 { border-color: #2b2b2b !important; }
-            .border-gray-300 { border-color: #3a3a3a !important; }
-            .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #262626 !important; }
-            .text-gray-900 { color: #f5f5f5 !important; }
-            .text-gray-700 { color: #d4d4d4 !important; }
-            .text-gray-600 { color: #b5b5b5 !important; }
-            .text-gray-500 { color: #9a9a9a !important; }
-            .text-gray-400 { color: #6b6b6b !important; }
-            input, select, textarea {
-                background-color: #171717 !important;
-                color: #f5f5f5 !important;
-                border-color: #3a3a3a !important;
-            }
-            input::placeholder { color: #6b6b6b !important; }
-            .bg-emerald-50 { background-color: rgba(16,185,129,0.12) !important; }
-            .bg-red-50 { background-color: rgba(239,68,68,0.12) !important; }
-            .bg-amber-50 { background-color: rgba(245,158,11,0.12) !important; }
-            .bg-purple-50 { background-color: rgba(168,85,247,0.12) !important; }
-            .bg-blue-50 { background-color: rgba(59,130,246,0.12) !important; }
+        /* Dark theme — either "system" (follows prefers-color-scheme) or an
+           explicit manual choice, both funneled into the same `.dark` class
+           on <html> so there's one set of override rules regardless of which
+           picked it. Existing templates consistently use a small vocabulary
+           of Tailwind utilities (bg-white, border-gray-200, text-gray-500,
+           etc.), so this block remaps that vocabulary instead of hand-editing
+           every template — a pragmatic tradeoff of the Play-CDN setup; a
+           compiled Tailwind build with real `dark:` variants would be the
+           cleaner long-term version. */
+        .dark, .dark body { background-color: #0a0a0a; }
+        .dark body { color: #e5e5e5; }
+        .dark .bg-white { background-color: #141414 !important; }
+        .dark .bg-gray-50 { background-color: #0a0a0a !important; }
+        .dark .bg-gray-100 { background-color: #1f1f1f !important; }
+        .dark .border-gray-100 { border-color: #262626 !important; }
+        .dark .border-gray-200 { border-color: #2b2b2b !important; }
+        .dark .border-gray-300 { border-color: #3a3a3a !important; }
+        .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #262626 !important; }
+        .dark .text-gray-900 { color: #f5f5f5 !important; }
+        .dark .text-gray-700 { color: #d4d4d4 !important; }
+        .dark .text-gray-600 { color: #b5b5b5 !important; }
+        .dark .text-gray-500 { color: #9a9a9a !important; }
+        .dark .text-gray-400 { color: #6b6b6b !important; }
+        .dark input, .dark select, .dark textarea {
+            background-color: #171717 !important;
+            color: #f5f5f5 !important;
+            border-color: #3a3a3a !important;
         }
+        .dark input::placeholder { color: #6b6b6b !important; }
+        .dark .bg-emerald-50 { background-color: rgba(16,185,129,0.12) !important; }
+        .dark .bg-red-50 { background-color: rgba(239,68,68,0.12) !important; }
+        .dark .bg-amber-50 { background-color: rgba(245,158,11,0.12) !important; }
+        .dark .bg-purple-50 { background-color: rgba(168,85,247,0.12) !important; }
+        .dark .bg-blue-50 { background-color: rgba(59,130,246,0.12) !important; }
         [x-cloak] { display: none !important; }
+
+        /* Privacy mode: masks money amounts everywhere at once via a single
+           class on <html>, so flipping the toggle covers the whole app
+           instantly no matter which page is showing. Text is fully replaced
+           (not just blurred), since a blur can still leak digit count/shape. */
+        .money-mask { display: inline-block; }
+        .privacy-mode .money-mask { color: transparent; position: relative; }
+        .privacy-mode .money-mask::after {
+            content: "\2022\2022\2022\2022\2022\2022";
+            position: absolute;
+            inset: 0;
+            color: #9ca3af;
+        }
+        .privacy-mode .privacy-blur-chart svg { filter: blur(8px); }
     </style>
 </head>
-<body class="h-full bg-gray-50 text-gray-900" x-data="{ menuOpen: false, analysisOpen: false }">
+<body
+    class="h-full bg-gray-50 text-gray-900"
+    x-data="{ menuOpen: false, analysisOpen: false }"
+    x-init="
+        Alpine.store('ui', {
+            theme: localStorage.getItem('sikatrack-theme') || 'system',
+            privacy: localStorage.getItem('sikatrack-privacy') === '1',
+            cycleTheme() {
+                this.theme = this.theme === 'system' ? 'light' : this.theme === 'light' ? 'dark' : 'system';
+                localStorage.setItem('sikatrack-theme', this.theme);
+                var dark = this.theme === 'dark' || (this.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', dark);
+            },
+            togglePrivacy() {
+                this.privacy = !this.privacy;
+                localStorage.setItem('sikatrack-privacy', this.privacy ? '1' : '0');
+                document.documentElement.classList.toggle('privacy-mode', this.privacy);
+            }
+        })
+    ">
     <div class="md:flex md:h-full">
         {% if user.is_authenticated %}
         {# Desktop sidebar — always dark, independent of the light/dark auto theme, matching a typical dashboard shell. #}
@@ -113,6 +159,14 @@
                 </a>
             </nav>
             <div class="p-3 border-t border-neutral-800">
+                <button @click="$store.ui.cycleTheme()" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-neutral-400 hover:bg-neutral-900 hover:text-white">
+                    <span class="flex items-center gap-3"><span>🌓</span> Theme</span>
+                    <span class="text-xs text-neutral-500" x-text="$store.ui.theme === 'system' ? 'Auto' : $store.ui.theme === 'dark' ? 'Dark' : 'Light'">Auto</span>
+                </button>
+                <button @click="$store.ui.togglePrivacy()" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-neutral-400 hover:bg-neutral-900 hover:text-white">
+                    <span class="flex items-center gap-3"><span>🙈</span> Hide amounts</span>
+                    <span class="text-xs text-neutral-500" x-text="$store.ui.privacy ? 'On' : 'Off'">Off</span>
+                </button>
                 <a href="{% url 'accounts:logout' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-400 hover:bg-neutral-900 hover:text-white">
                     <span>↩</span> Log out
                 </a>
@@ -236,6 +290,12 @@
             <a href="{% url 'billing:my_credits' %}" class="block py-2 text-sm">My Credits</a>
             <a href="{% url 'accounts:settings' %}" class="block py-2 text-sm">Settings</a>
             <a href="{% url 'accounts:support' %}" class="block py-2 text-sm">Support</a>
+            <button @click="$store.ui.cycleTheme()" class="w-full text-left py-2 text-sm">
+                Theme: <span x-text="$store.ui.theme === 'system' ? 'Auto' : $store.ui.theme === 'dark' ? 'Dark' : 'Light'">Auto</span>
+            </button>
+            <button @click="$store.ui.togglePrivacy()" class="w-full text-left py-2 text-sm">
+                Hide amounts: <span x-text="$store.ui.privacy ? 'On' : 'Off'">Off</span>
+            </button>
             <a href="{% url 'accounts:logout' %}" class="block py-2 text-sm text-red-600">Log out</a>
         </div>
     </div>

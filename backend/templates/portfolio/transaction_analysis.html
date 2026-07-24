@@ -14,7 +14,7 @@
     </div>
     <div class="bg-white border border-gray-200 rounded-xl p-4">
         <p class="text-xs text-gray-500">Avg. purchase price</p>
-        <p class="font-bold text-lg">{% if avg_purchase_price %}GHS {{ avg_purchase_price|floatformat:2 }}{% else %}—{% endif %}</p>
+        <p class="font-bold text-lg money-mask">{% if avg_purchase_price %}GHS {{ avg_purchase_price|floatformat:2 }}{% else %}—{% endif %}</p>
     </div>
     <div class="bg-white border border-gray-200 rounded-xl p-4">
         <p class="text-xs text-gray-500">Avg. holding period</p>
@@ -26,15 +26,15 @@
     <div class="bg-white border border-gray-200 rounded-xl p-4">
         <p class="text-xs text-gray-500 mb-1">Largest purchase</p>
         {% if largest_purchase %}
-            <p class="font-semibold">{{ largest_purchase.instrument.ticker }} — GHS {{ largest_purchase.gross_amount|floatformat:2 }}</p>
-            <p class="text-xs text-gray-400">{{ largest_purchase.quantity }} shares @ {{ largest_purchase.price_per_share }} on {{ largest_purchase.trade_date }}</p>
+            <p class="font-semibold"><span>{{ largest_purchase.instrument.ticker }}</span> — <span class="money-mask">GHS {{ largest_purchase.gross_amount|floatformat:2 }}</span></p>
+            <p class="text-xs text-gray-400"><span class="money-mask">{{ largest_purchase.quantity }} shares @ {{ largest_purchase.price_per_share }}</span> on {{ largest_purchase.trade_date }}</p>
         {% else %}<p class="text-sm text-gray-400">—</p>{% endif %}
     </div>
     <div class="bg-white border border-gray-200 rounded-xl p-4">
         <p class="text-xs text-gray-500 mb-1">Largest sale</p>
         {% if largest_sale %}
-            <p class="font-semibold">{{ largest_sale.instrument.ticker }} — GHS {{ largest_sale.gross_amount|floatformat:2 }}</p>
-            <p class="text-xs text-gray-400">{{ largest_sale.quantity }} shares @ {{ largest_sale.price_per_share }} on {{ largest_sale.trade_date }}</p>
+            <p class="font-semibold"><span>{{ largest_sale.instrument.ticker }}</span> — <span class="money-mask">GHS {{ largest_sale.gross_amount|floatformat:2 }}</span></p>
+            <p class="text-xs text-gray-400"><span class="money-mask">{{ largest_sale.quantity }} shares @ {{ largest_sale.price_per_share }}</span> on {{ largest_sale.trade_date }}</p>
         {% else %}<p class="text-sm text-gray-400">—</p>{% endif %}
     </div>
 </div>
@@ -49,8 +49,8 @@
         {% for m in monthly %}
         <tr class="border-t border-gray-100">
             <td class="py-2">{{ m.month }}</td>
-            <td class="py-2 text-right">{{ m.buys|floatformat:2 }}</td>
-            <td class="py-2 text-right">{{ m.sells|floatformat:2 }}</td>
+            <td class="py-2 text-right money-mask">{{ m.buys|floatformat:2 }}</td>
+            <td class="py-2 text-right money-mask">{{ m.sells|floatformat:2 }}</td>
             <td class="py-2 text-right">{{ m.count }}</td>
         </tr>
         {% empty %}

@@ -19,9 +19,9 @@
     </tr></thead>
     <tbody>
     {% for r in rows %}
-        <tr class="border-t border-gray-100">
-            <td class="py-2 font-semibold">{{ r.instrument.ticker }}</td>
-            <td class="py-2 text-gray-500">{{ r.instrument.name }}</td>
+        <tr class="border-t border-gray-100 hover:bg-gray-50">
+            <td class="py-2 font-semibold"><a href="{% url 'instruments:detail' r.instrument.ticker %}" class="hover:text-emerald-700">{{ r.instrument.ticker }}</a></td>
+            <td class="py-2 text-gray-500"><a href="{% url 'instruments:detail' r.instrument.ticker %}">{{ r.instrument.name }}</a></td>
             <td class="py-2 text-right">{% if r.close_price is not None %}GHS {{ r.close_price|floatformat:2 }} <span class="text-gray-400 text-xs">({{ r.trade_date }})</span>{% else %}—{% endif %}</td>
             <td class="py-2 text-right {% if r.change_pct and r.change_pct >= 0 %}text-emerald-700{% elif r.change_pct %}text-red-600{% endif %}">
                 {% if r.change_pct is not None %}{{ r.change_pct|floatformat:2 }}%{% else %}—{% endif %}

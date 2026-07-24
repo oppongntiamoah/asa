@@ -6,4 +6,5 @@ app_name = "instruments"
 
 urlpatterns = [
     path("", views.market, name="market"),
+    path("<str:ticker>/", views.detail, name="detail"),
 ]

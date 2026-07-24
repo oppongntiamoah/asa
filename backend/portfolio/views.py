@@ -9,7 +9,7 @@ from corporate_actions.models import CorporateAction
 from instruments.models import Instrument
 
 from . import analytics, insights
-from .charts import svg_line_chart
+from .charts import svg_candle_chart, svg_line_chart
 from .forms import CashBalanceForm, TransactionForm
 from .models import CashBalance, Holding, Transaction
 from .services import (
@@ -245,10 +245,24 @@ def holding_detail(request, instrument_id):
     holding = get_object_or_404(Holding, user=request.user, instrument_id=instrument_id)
     transactions = Transaction.objects.filter(user=request.user, instrument=holding.instrument)
     dividend_receipts = holding.instrument.dividends.filter(receipts__user=request.user).prefetch_related("receipts")
+
+    from instruments.services import price_history
+
+    bars = price_history(holding.instrument, days=180)
+    chart_series = [(b.trade_date, float(b.close_price)) for b in bars if b.close_price is not None]
+    candle_svg, has_intraday_range = svg_candle_chart(bars)
+
     return render(
         request,
         "portfolio/holding_detail.html",
-        {"holding": holding, "transactions": transactions, "dividend_receipts": dividend_receipts},
+        {
+            "holding": holding,
+            "transactions": transactions,
+            "dividend_receipts": dividend_receipts,
+            "chart_svg": svg_line_chart(chart_series),
+            "candle_svg": candle_svg,
+            "has_intraday_range": has_intraday_range,
+        },
     )
 
 
