@@ -1,3 +1,4 @@
+{% load icons nav %}
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
@@ -96,85 +97,126 @@
     ">
     <div class="md:flex md:h-full">
         {% if user.is_authenticated %}
+        {% url 'portfolio:dashboard' as dashboard_url %}
+        {% with url_name=request.resolver_match.url_name ns=request.resolver_match.namespaces %}
+        {# Grouped active-state: computed by the nav_group_active tag so both the desktop sidebar and the mobile drawer stay in sync without repeating the same conditionals in two places. #}
+        {% nav_group_active "portfolio" as is_portfolio %}
+        {% nav_group_active "analysis" as is_analysis %}
+        {% nav_group_active "market" as is_market %}
         {# Desktop sidebar — always dark, independent of the light/dark auto theme, matching a typical dashboard shell. #}
-        <aside class="hidden md:flex md:w-60 md:flex-col md:fixed md:inset-y-0 bg-neutral-950 text-neutral-300">
+        <aside
+            class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-neutral-950 text-neutral-300"
+            x-data="{
+                open: {
+                    portfolio: {% if is_portfolio %}true{% else %}false{% endif %},
+                    analysis: {% if is_analysis %}true{% else %}false{% endif %},
+                    market: {% if is_market %}true{% else %}false{% endif %}
+                }
+            }"
+        >
             <div class="px-5 py-5 flex items-center gap-2 border-b border-neutral-800">
                 <span class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold">S</span>
                 <span class="font-bold text-white">SikaTrack</span>
             </div>
+
+            <div class="px-3 pt-4">
+                <a href="{% url 'portfolio:transaction_add' %}" class="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium">
+                    {% icon "plus" "w-4 h-4" %} Add transaction
+                </a>
+            </div>
+
             <nav class="flex-1 overflow-y-auto px-3 py-4 text-sm">
-                {% url 'portfolio:dashboard' as dashboard_url %}
-                <a href="{{ dashboard_url }}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 {% if request.path == dashboard_url %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900{% endif %}">
-                    <span>🏠</span> Dashboard
-                </a>
-                <a href="{% url 'portfolio:holdings' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 {% if 'holding' in request.resolver_match.url_name|default:'' %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900{% endif %}">
-                    <span>📊</span> Holdings
-                </a>
-                <a href="{% url 'portfolio:transaction_list' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 {% if request.resolver_match.url_name == 'transaction_list' %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900{% endif %}">
-                    <span>🔁</span> Transactions
-                </a>
-                <a href="{% url 'statements:upload' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 {% if 'statements' in request.resolver_match.namespaces %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900{% endif %}">
-                    <span>📄</span> Statements
-                </a>
-                <a href="{% url 'watchlist:watchlist' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 {% if 'watchlist' in request.resolver_match.namespaces %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900{% endif %}">
-                    <span>👀</span> Watchlist
-                </a>
-                <a href="{% url 'dividends:history' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 {% if 'dividends' in request.resolver_match.namespaces %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900{% endif %}">
-                    <span>💰</span> Dividends
+                <a href="{{ dashboard_url }}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 {% if request.path == dashboard_url %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900 hover:text-white{% endif %}">
+                    {% icon "home" %} Dashboard
                 </a>
 
-                <button @click="analysisOpen = !analysisOpen" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg mb-1 hover:bg-neutral-900">
-                    <span class="flex items-center gap-3"><span>📈</span> Analysis</span>
-                    <span x-text="analysisOpen ? '−' : '+'"></span>
+                <p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-600">Portfolio</p>
+                <button @click="open.portfolio = !open.portfolio" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg mb-0.5 hover:bg-neutral-900 hover:text-white {% if is_portfolio %}text-white{% endif %}">
+                    <span class="flex items-center gap-3">{% icon "holdings" %} Holdings & Activity</span>
+                    <span class="transition-transform" :class="open.portfolio ? 'rotate-180' : ''">{% icon "chevron-down" "w-4 h-4 text-neutral-500" %}</span>
                 </button>
-                <div x-show="analysisOpen" x-cloak class="pl-9 space-y-1 mb-1">
-                    <a href="{% url 'portfolio:performance' %}" class="block py-1.5 text-neutral-400 hover:text-white">Performance</a>
-                    <a href="{% url 'portfolio:cost_basis' %}" class="block py-1.5 text-neutral-400 hover:text-white">Cost Basis</a>
-                    <a href="{% url 'portfolio:sector_analysis' %}" class="block py-1.5 text-neutral-400 hover:text-white">Sector Analysis</a>
-                    <a href="{% url 'portfolio:risk_health' %}" class="block py-1.5 text-neutral-400 hover:text-white">Risk & Health</a>
-                    <a href="{% url 'portfolio:insights' %}" class="block py-1.5 text-neutral-400 hover:text-white">Insights</a>
-                    <a href="{% url 'portfolio:cash_flow' %}" class="block py-1.5 text-neutral-400 hover:text-white">Cash Flow</a>
-                    <a href="{% url 'portfolio:tax_summary' %}" class="block py-1.5 text-neutral-400 hover:text-white">Tax Summary</a>
-                    <a href="{% url 'portfolio:timeline' %}" class="block py-1.5 text-neutral-400 hover:text-white">Timeline</a>
-                    <a href="{% url 'portfolio:transaction_analysis' %}" class="block py-1.5 text-neutral-400 hover:text-white">Transaction Analysis</a>
+                <div x-show="open.portfolio" x-cloak class="pl-3 space-y-0.5 mb-1">
+                    <a href="{% url 'portfolio:holdings' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'holdings' or url_name == 'holding_detail' or url_name == 'stock_breakdown' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Holdings</a>
+                    <a href="{% url 'portfolio:transaction_list' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'transaction_list' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Transactions</a>
+                    <a href="{% url 'statements:upload' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'statements' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Statements</a>
+                    <a href="{% url 'watchlist:watchlist' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'watchlist' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Watchlist</a>
+                    <a href="{% url 'dividends:history' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'dividends' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Dividends</a>
                 </div>
 
-                <a href="{% url 'instruments:market' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 {% if 'instruments' in request.resolver_match.namespaces %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900{% endif %}">
-                    <span>🌐</span> Market
-                </a>
-                <a href="{% url 'corporate_actions:calendar' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 {% if 'corporate_actions' in request.resolver_match.namespaces %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900{% endif %}">
-                    <span>📅</span> Calendar
-                </a>
-                <a href="{% url 'news:list' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 {% if 'news' in request.resolver_match.namespaces %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900{% endif %}">
-                    <span>📰</span> News
-                </a>
-                <a href="{% url 'billing:pricing' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 {% if 'billing' in request.resolver_match.namespaces %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900{% endif %}">
-                    <span>💳</span> Pricing
-                </a>
-                <a href="{% url 'accounts:settings' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 {% if request.resolver_match.url_name == 'settings' %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900{% endif %}">
-                    <span>⚙️</span> Settings
-                </a>
-                <a href="{% url 'accounts:support' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-1 {% if request.resolver_match.url_name == 'support' %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900{% endif %}">
-                    <span>🆘</span> Support
-                </a>
+                <p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-600">Insights</p>
+                <button @click="open.analysis = !open.analysis" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg mb-0.5 hover:bg-neutral-900 hover:text-white {% if is_analysis %}text-white{% endif %}">
+                    <span class="flex items-center gap-3">{% icon "analysis" %} Analysis</span>
+                    <span class="transition-transform" :class="open.analysis ? 'rotate-180' : ''">{% icon "chevron-down" "w-4 h-4 text-neutral-500" %}</span>
+                </button>
+                <div x-show="open.analysis" x-cloak class="pl-3 space-y-0.5 mb-1">
+                    <a href="{% url 'portfolio:performance' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'performance' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Performance</a>
+                    <a href="{% url 'portfolio:cost_basis' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'cost_basis' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Cost Basis</a>
+                    <a href="{% url 'portfolio:sector_analysis' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'sector_analysis' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Sector Analysis</a>
+                    <a href="{% url 'portfolio:risk_health' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'risk_health' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Risk & Health</a>
+                    <a href="{% url 'portfolio:insights' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'insights' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Insights</a>
+                    <a href="{% url 'portfolio:cash_flow' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'cash_flow' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Cash Flow</a>
+                    <a href="{% url 'portfolio:tax_summary' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'tax_summary' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Tax Summary</a>
+                    <a href="{% url 'portfolio:timeline' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'timeline' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Timeline</a>
+                    <a href="{% url 'portfolio:transaction_analysis' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'transaction_analysis' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Transaction Analysis</a>
+                </div>
+
+                <p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-600">Market</p>
+                <button @click="open.market = !open.market" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg mb-0.5 hover:bg-neutral-900 hover:text-white {% if is_market %}text-white{% endif %}">
+                    <span class="flex items-center gap-3">{% icon "market" %} Market</span>
+                    <span class="transition-transform" :class="open.market ? 'rotate-180' : ''">{% icon "chevron-down" "w-4 h-4 text-neutral-500" %}</span>
+                </button>
+                <div x-show="open.market" x-cloak class="pl-3 space-y-0.5 mb-1">
+                    <a href="{% url 'instruments:market' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'instruments' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Prices</a>
+                    <a href="{% url 'corporate_actions:calendar' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'corporate_actions' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Calendar</a>
+                    <a href="{% url 'news:list' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'news' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">News</a>
+                </div>
             </nav>
+
             <div class="p-3 border-t border-neutral-800">
+                <div class="flex items-center gap-3 px-2 py-2 mb-1">
+                    <span class="w-8 h-8 shrink-0 rounded-full bg-neutral-800 text-white text-xs font-semibold flex items-center justify-center">{{ user.first_name|default:user.username|slice:":1"|upper }}</span>
+                    <div class="min-w-0">
+                        <p class="text-sm text-white truncate">{{ user.first_name|default:user.username }}</p>
+                        <p class="text-xs text-neutral-500 truncate">{{ user.email }}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-1 mb-1">
+                    <a href="{% url 'accounts:settings' %}" title="Settings" class="flex flex-col items-center gap-1 py-2 rounded-lg text-neutral-400 hover:bg-neutral-900 hover:text-white {% if url_name == 'settings' %}bg-neutral-900 text-white{% endif %}">
+                        {% icon "settings" "w-5 h-5" %}<span class="text-[10px]">Settings</span>
+                    </a>
+                    <a href="{% url 'billing:pricing' %}" title="Pricing" class="flex flex-col items-center gap-1 py-2 rounded-lg text-neutral-400 hover:bg-neutral-900 hover:text-white {% if 'billing' in ns %}bg-neutral-900 text-white{% endif %}">
+                        {% icon "pricing" "w-5 h-5" %}<span class="text-[10px]">Pricing</span>
+                    </a>
+                    <a href="{% url 'accounts:support' %}" title="Support" class="flex flex-col items-center gap-1 py-2 rounded-lg text-neutral-400 hover:bg-neutral-900 hover:text-white {% if url_name == 'support' %}bg-neutral-900 text-white{% endif %}">
+                        {% icon "support" "w-5 h-5" %}<span class="text-[10px]">Support</span>
+                    </a>
+                </div>
                 <button @click="$store.ui.cycleTheme()" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-neutral-400 hover:bg-neutral-900 hover:text-white">
-                    <span class="flex items-center gap-3"><span>🌓</span> Theme</span>
+                    <span class="flex items-center gap-3">
+                        <span x-show="$store.ui.theme === 'light'">{% icon "sun" "w-5 h-5" %}</span>
+                        <span x-show="$store.ui.theme === 'dark'" x-cloak>{% icon "moon" "w-5 h-5" %}</span>
+                        <span x-show="$store.ui.theme === 'system'" x-cloak>{% icon "auto" "w-5 h-5" %}</span>
+                        Theme
+                    </span>
                     <span class="text-xs text-neutral-500" x-text="$store.ui.theme === 'system' ? 'Auto' : $store.ui.theme === 'dark' ? 'Dark' : 'Light'">Auto</span>
                 </button>
                 <button @click="$store.ui.togglePrivacy()" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-neutral-400 hover:bg-neutral-900 hover:text-white">
-                    <span class="flex items-center gap-3"><span>🙈</span> Hide amounts</span>
+                    <span class="flex items-center gap-3">
+                        <span x-show="!$store.ui.privacy">{% icon "eye" "w-5 h-5" %}</span>
+                        <span x-show="$store.ui.privacy" x-cloak>{% icon "eye-off" "w-5 h-5" %}</span>
+                        Hide amounts
+                    </span>
                     <span class="text-xs text-neutral-500" x-text="$store.ui.privacy ? 'On' : 'Off'">Off</span>
                 </button>
                 <a href="{% url 'accounts:logout' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-400 hover:bg-neutral-900 hover:text-white">
-                    <span>↩</span> Log out
+                    {% icon "logout" "w-5 h-5" %} Log out
                 </a>
             </div>
         </aside>
+        {% endwith %}
         {% endif %}
 
-        <div class="flex-1 flex flex-col min-h-full {% if user.is_authenticated %}md:ml-60{% endif %}">
+        <div class="flex-1 flex flex-col min-h-full {% if user.is_authenticated %}md:ml-64{% endif %}">
             <header class="bg-white border-b border-gray-200 sticky top-0 z-10">
                 <div class="px-4 md:px-8 py-3 flex items-center justify-between gap-4">
                     {% if not user.is_authenticated %}
@@ -237,68 +279,85 @@
     </div>
 
     {% if user.is_authenticated %}
+    {% with url_name=request.resolver_match.url_name ns=request.resolver_match.namespaces %}
     <nav class="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-20 md:hidden">
         <div class="max-w-4xl mx-auto grid grid-cols-4 text-center text-xs">
-            <a href="{% url 'portfolio:dashboard' %}" class="py-3 flex flex-col items-center gap-1 {% if request.resolver_match.url_name == 'dashboard' %}text-emerald-700{% else %}text-gray-500{% endif %}">
-                <span>🏠</span>Dashboard
+            <a href="{% url 'portfolio:dashboard' %}" class="py-3 flex flex-col items-center gap-1 {% if url_name == 'dashboard' %}text-emerald-700{% else %}text-gray-500{% endif %}">
+                {% icon "home" "w-5 h-5" %}Dashboard
             </a>
-            <a href="{% url 'portfolio:holdings' %}" class="py-3 flex flex-col items-center gap-1 {% if request.resolver_match.url_name == 'holdings' %}text-emerald-700{% else %}text-gray-500{% endif %}">
-                <span>📊</span>Holdings
+            <a href="{% url 'portfolio:holdings' %}" class="py-3 flex flex-col items-center gap-1 {% if url_name == 'holdings' or url_name == 'holding_detail' %}text-emerald-700{% else %}text-gray-500{% endif %}">
+                {% icon "holdings" "w-5 h-5" %}Holdings
             </a>
-            <a href="{% url 'portfolio:transaction_add' %}" class="py-3 flex flex-col items-center gap-1 {% if request.resolver_match.url_name == 'transaction_add' %}text-emerald-700{% else %}text-gray-500{% endif %}">
-                <span>➕</span>Add
+            <a href="{% url 'portfolio:transaction_add' %}" class="py-3 flex flex-col items-center gap-1 {% if url_name == 'transaction_add' %}text-emerald-700{% else %}text-gray-500{% endif %}">
+                {% icon "plus" "w-5 h-5" %}Add
             </a>
             <button @click="menuOpen = true" class="py-3 flex flex-col items-center gap-1 text-gray-500">
-                <span>☰</span>Menu
+                {% icon "menu" "w-5 h-5 mx-auto" %}Menu
             </button>
         </div>
     </nav>
 
     <div x-show="menuOpen" x-cloak @keydown.escape.window="menuOpen = false" class="fixed inset-0 z-30 md:hidden" style="display: none;">
         <div class="absolute inset-0 bg-black/40" @click="menuOpen = false"></div>
-        <div class="absolute right-0 top-0 bottom-0 w-72 bg-white overflow-y-auto p-5" @click.outside="menuOpen = false">
-            <div class="flex justify-between items-center mb-4">
-                <p class="font-bold text-emerald-700">Menu</p>
-                <button @click="menuOpen = false" class="text-gray-400">✕</button>
+        <div class="absolute right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white overflow-y-auto" @click.outside="menuOpen = false">
+            <div class="flex items-center gap-3 p-5 border-b border-gray-100">
+                <span class="w-9 h-9 shrink-0 rounded-full bg-emerald-600 text-white text-sm font-semibold flex items-center justify-center">{{ user.first_name|default:user.username|slice:":1"|upper }}</span>
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold truncate">{{ user.first_name|default:user.username }}</p>
+                    <p class="text-xs text-gray-500 truncate">{{ user.email }}</p>
+                </div>
+                <button @click="menuOpen = false" class="text-gray-400 p-1 shrink-0">{% icon "close" "w-5 h-5" %}</button>
             </div>
 
-            <p class="text-xs font-semibold text-gray-400 uppercase mt-4 mb-2">Portfolio</p>
-            <a href="{% url 'portfolio:holdings' %}" class="block py-2 text-sm">Holdings</a>
-            <a href="{% url 'portfolio:transaction_list' %}" class="block py-2 text-sm">Transaction History</a>
-            <a href="{% url 'portfolio:stock_breakdown' %}" class="block py-2 text-sm">Stock Breakdown</a>
-            <a href="{% url 'statements:upload' %}" class="block py-2 text-sm">Upload Statement</a>
-            <a href="{% url 'dividends:history' %}" class="block py-2 text-sm">Dividend Dashboard</a>
-            <a href="{% url 'watchlist:watchlist' %}" class="block py-2 text-sm">Watchlist</a>
+            <div class="p-5">
+                <a href="{% url 'portfolio:transaction_add' %}" class="flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium mb-5">
+                    {% icon "plus" "w-4 h-4" %} Add transaction
+                </a>
 
-            <p class="text-xs font-semibold text-gray-400 uppercase mt-4 mb-2">Analysis</p>
-            <a href="{% url 'portfolio:performance' %}" class="block py-2 text-sm">Performance</a>
-            <a href="{% url 'portfolio:transaction_analysis' %}" class="block py-2 text-sm">Transaction Analysis</a>
-            <a href="{% url 'portfolio:cost_basis' %}" class="block py-2 text-sm">Cost Basis</a>
-            <a href="{% url 'portfolio:sector_analysis' %}" class="block py-2 text-sm">Sector Analysis</a>
-            <a href="{% url 'portfolio:risk_health' %}" class="block py-2 text-sm">Risk & Health</a>
-            <a href="{% url 'portfolio:insights' %}" class="block py-2 text-sm">Insights</a>
-            <a href="{% url 'portfolio:cash_flow' %}" class="block py-2 text-sm">Cash Flow</a>
-            <a href="{% url 'portfolio:tax_summary' %}" class="block py-2 text-sm">Tax Summary</a>
-            <a href="{% url 'portfolio:timeline' %}" class="block py-2 text-sm">Timeline</a>
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2 mb-1">Portfolio</p>
+                <a href="{% url 'portfolio:holdings' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if url_name == 'holdings' or url_name == 'holding_detail' or url_name == 'stock_breakdown' %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "holdings" "w-4 h-4" %}Holdings & Breakdown</a>
+                <a href="{% url 'portfolio:transaction_list' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if url_name == 'transaction_list' %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "transactions" "w-4 h-4" %}Transaction History</a>
+                <a href="{% url 'statements:upload' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if 'statements' in ns %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "statements" "w-4 h-4" %}Upload Statement</a>
+                <a href="{% url 'dividends:history' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if 'dividends' in ns %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "dividends" "w-4 h-4" %}Dividend Dashboard</a>
+                <a href="{% url 'watchlist:watchlist' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if 'watchlist' in ns %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "watchlist" "w-4 h-4" %}Watchlist</a>
 
-            <p class="text-xs font-semibold text-gray-400 uppercase mt-4 mb-2">Market</p>
-            <a href="{% url 'instruments:market' %}" class="block py-2 text-sm">Market</a>
-            <a href="{% url 'corporate_actions:calendar' %}" class="block py-2 text-sm">Calendar</a>
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-4 mb-1">Analysis</p>
+                <a href="{% url 'portfolio:performance' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if url_name == 'performance' %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "analysis" "w-4 h-4" %}Performance</a>
+                <a href="{% url 'portfolio:transaction_analysis' %}" class="flex items-center gap-3 py-2 pl-7 text-sm {% if url_name == 'transaction_analysis' %}text-emerald-700 font-medium{% else %}text-gray-600{% endif %}">Transaction Analysis</a>
+                <a href="{% url 'portfolio:cost_basis' %}" class="flex items-center gap-3 py-2 pl-7 text-sm {% if url_name == 'cost_basis' %}text-emerald-700 font-medium{% else %}text-gray-600{% endif %}">Cost Basis</a>
+                <a href="{% url 'portfolio:sector_analysis' %}" class="flex items-center gap-3 py-2 pl-7 text-sm {% if url_name == 'sector_analysis' %}text-emerald-700 font-medium{% else %}text-gray-600{% endif %}">Sector Analysis</a>
+                <a href="{% url 'portfolio:risk_health' %}" class="flex items-center gap-3 py-2 pl-7 text-sm {% if url_name == 'risk_health' %}text-emerald-700 font-medium{% else %}text-gray-600{% endif %}">Risk & Health</a>
+                <a href="{% url 'portfolio:insights' %}" class="flex items-center gap-3 py-2 pl-7 text-sm {% if url_name == 'insights' %}text-emerald-700 font-medium{% else %}text-gray-600{% endif %}">Insights</a>
+                <a href="{% url 'portfolio:cash_flow' %}" class="flex items-center gap-3 py-2 pl-7 text-sm {% if url_name == 'cash_flow' %}text-emerald-700 font-medium{% else %}text-gray-600{% endif %}">Cash Flow</a>
+                <a href="{% url 'portfolio:tax_summary' %}" class="flex items-center gap-3 py-2 pl-7 text-sm {% if url_name == 'tax_summary' %}text-emerald-700 font-medium{% else %}text-gray-600{% endif %}">Tax Summary</a>
+                <a href="{% url 'portfolio:timeline' %}" class="flex items-center gap-3 py-2 pl-7 text-sm {% if url_name == 'timeline' %}text-emerald-700 font-medium{% else %}text-gray-600{% endif %}">Timeline</a>
 
-            <p class="text-xs font-semibold text-gray-400 uppercase mt-4 mb-2">Account</p>
-            <a href="{% url 'billing:pricing' %}" class="block py-2 text-sm">Pricing</a>
-            <a href="{% url 'billing:my_credits' %}" class="block py-2 text-sm">My Credits</a>
-            <a href="{% url 'accounts:settings' %}" class="block py-2 text-sm">Settings</a>
-            <a href="{% url 'accounts:support' %}" class="block py-2 text-sm">Support</a>
-            <button @click="$store.ui.cycleTheme()" class="w-full text-left py-2 text-sm">
-                Theme: <span x-text="$store.ui.theme === 'system' ? 'Auto' : $store.ui.theme === 'dark' ? 'Dark' : 'Light'">Auto</span>
-            </button>
-            <button @click="$store.ui.togglePrivacy()" class="w-full text-left py-2 text-sm">
-                Hide amounts: <span x-text="$store.ui.privacy ? 'On' : 'Off'">Off</span>
-            </button>
-            <a href="{% url 'accounts:logout' %}" class="block py-2 text-sm text-red-600">Log out</a>
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-4 mb-1">Market</p>
+                <a href="{% url 'instruments:market' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if 'instruments' in ns %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "market" "w-4 h-4" %}Prices</a>
+                <a href="{% url 'corporate_actions:calendar' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if 'corporate_actions' in ns %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "calendar" "w-4 h-4" %}Calendar</a>
+                <a href="{% url 'news:list' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if 'news' in ns %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "news" "w-4 h-4" %}News</a>
+
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-4 mb-1">Account</p>
+                <a href="{% url 'billing:pricing' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if url_name == 'pricing' %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "pricing" "w-4 h-4" %}Pricing</a>
+                <a href="{% url 'billing:my_credits' %}" class="flex items-center gap-3 py-2 pl-7 text-sm {% if url_name == 'my_credits' %}text-emerald-700 font-medium{% else %}text-gray-600{% endif %}">My Credits</a>
+                <a href="{% url 'accounts:settings' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if url_name == 'settings' %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "settings" "w-4 h-4" %}Settings</a>
+                <a href="{% url 'accounts:support' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if url_name == 'support' %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "support" "w-4 h-4" %}Support</a>
+
+                <div class="border-t border-gray-100 mt-3 pt-3">
+                    <button @click="$store.ui.cycleTheme()" class="w-full flex items-center justify-between gap-3 py-2 text-sm text-gray-700">
+                        <span class="flex items-center gap-3">{% icon "auto" "w-4 h-4" %}Theme</span>
+                        <span class="text-xs text-gray-400" x-text="$store.ui.theme === 'system' ? 'Auto' : $store.ui.theme === 'dark' ? 'Dark' : 'Light'">Auto</span>
+                    </button>
+                    <button @click="$store.ui.togglePrivacy()" class="w-full flex items-center justify-between gap-3 py-2 text-sm text-gray-700">
+                        <span class="flex items-center gap-3">{% icon "eye" "w-4 h-4" %}Hide amounts</span>
+                        <span class="text-xs text-gray-400" x-text="$store.ui.privacy ? 'On' : 'Off'">Off</span>
+                    </button>
+                    <a href="{% url 'accounts:logout' %}" class="flex items-center gap-3 py-2 text-sm text-red-600">{% icon "logout" "w-4 h-4" %}Log out</a>
+                </div>
+            </div>
         </div>
     </div>
+    {% endwith %}
     {% endif %}
 </body>
 </html>
