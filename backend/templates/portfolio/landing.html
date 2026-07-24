@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}SikaTrack — Your GSE Portfolio, Tracked Properly{% endblock %}
+{% block content %}
+
+<section class="grid md:grid-cols-2 gap-10 items-center py-8 md:py-16">
+    <div>
+        <span class="inline-block text-xs font-semibold tracking-wide uppercase text-emerald-700 bg-emerald-50 rounded-full px-3 py-1 mb-4">
+            Ghana Stock Exchange
+        </span>
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+            Your GSE portfolio,<br><span class="text-emerald-600">finally tracked properly.</span>
+        </h1>
+        <p class="text-gray-600 text-lg mb-8 max-w-md">
+            Upload your broker statement, and SikaTrack builds your real cost
+            basis, allocation, and performance — across every asset class your
+            broker actually holds for you.
+        </p>
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="{% url 'accounts:signup' %}" class="bg-emerald-600 text-white font-medium px-5 py-3 rounded-lg hover:bg-emerald-700">
+                Get started free
+            </a>
+            <a href="{% url 'accounts:login' %}" class="font-medium px-5 py-3 rounded-lg border border-gray-300 hover:bg-gray-100">
+                Log in
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-2xl p-6">
+        {% if snapshot.as_of %}
+            <div class="flex items-center justify-between mb-4">
+                <p class="text-xs uppercase tracking-wide text-gray-500">GSE tracked instruments</p>
+                <span class="text-xs text-gray-400">As of {{ snapshot.as_of }}</span>
+            </div>
+            <p class="text-3xl font-bold mb-6">{{ snapshot.instrument_count }}+</p>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs text-gray-500 mb-2">Top gainers</p>
+                    {% for g in snapshot.gainers %}
+                        <div class="flex items-center justify-between text-sm py-1">
+                            <span class="font-medium">{{ g.instrument.ticker }}</span>
+                            <span class="text-emerald-600">+{{ g.change_pct|floatformat:2 }}%</span>
+                        </div>
+                    {% empty %}
+                        <p class="text-sm text-gray-400">—</p>
+                    {% endfor %}
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 mb-2">Top losers</p>
+                    {% for l in snapshot.losers %}
+                        <div class="flex items-center justify-between text-sm py-1">
+                            <span class="font-medium">{{ l.instrument.ticker }}</span>
+                            <span class="text-red-600">{{ l.change_pct|floatformat:2 }}%</span>
+                        </div>
+                    {% empty %}
+                        <p class="text-sm text-gray-400">—</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <p class="text-xs text-gray-400 mt-4">
+                Daily closing prices from GSE's published data — not live quotes.
+            </p>
+        {% else %}
+            <p class="text-gray-500 text-sm">No market data ingested yet.</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="py-8 md:py-12">
+    <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-white border border-gray-200 rounded-xl p-6">
+            <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center mb-4 text-lg">📄</div>
+            <h3 class="font-semibold mb-2">Upload your broker statement</h3>
+            <p class="text-sm text-gray-600">IC Securities and Black Star Advisors PDFs, parsed automatically — review and confirm before anything is saved.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-6">
+            <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center mb-4 text-lg">📊</div>
+            <h3 class="font-semibold mb-2">See your true portfolio value</h3>
+            <p class="text-sm text-gray-600">Equities, funds, fixed income, and cash in one view — with average-cost P&L, not just a broker's snapshot table.</p>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-xl p-6">
+            <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center mb-4 text-lg">📱</div>
+            <h3 class="font-semibold mb-2">Install it like an app</h3>
+            <p class="text-sm text-gray-600">Add SikaTrack to your home screen — no app store required, works on any device.</p>
+        </div>
+    </div>
+</section>
+
+{% if latest_news %}
+<section class="py-8 md:py-12">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold">Market News</h2>
+        <a href="{% url 'news:list' %}" class="text-sm text-emerald-700 hover:underline">All news →</a>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5">
+        {% for a in latest_news %}
+        <a href="{% url 'news:detail' a.slug %}" class="block bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-emerald-300 transition-colors">
+            {% if a.image %}
+                <img src="{{ a.image.url }}" alt="" class="w-full h-32 object-cover">
+            {% else %}
+                <div class="w-full h-32 bg-gradient-to-br from-emerald-50 to-gray-100"></div>
+            {% endif %}
+            <div class="p-4">
+                <span class="text-xs font-semibold uppercase tracking-wide text-emerald-700">{{ a.get_category_display }}</span>
+                <h3 class="font-semibold mt-1 mb-1 leading-snug">{{ a.title }}</h3>
+                <p class="text-xs text-gray-400">{{ a.published_at|date:"j M Y" }}</p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

@@ -19,7 +19,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_q",
     "import_export",
-    "rest_framework",
     "accounts",
     "instruments",
     "portfolio",
@@ -29,7 +28,6 @@ INSTALLED_APPS = [
     "billing",
     "watchlist",
     "news",
-    "api",
 ]
 
 MIDDLEWARE = [
@@ -119,13 +117,3 @@ PRIVATE_MEDIA_ROOT = BASE_DIR / "private_media"
 # missing key only matters once the founder actually switches billing on.
 PAYSTACK_SECRET_KEY = config("PAYSTACK_SECRET_KEY", default="")
 PAYSTACK_PUBLIC_KEY = config("PAYSTACK_PUBLIC_KEY", default="")
-
-# The Svelte PWA (see frontend/) talks to this API using session auth +
-# CSRF, not tokens — it's served from the same origin (Vite's dev proxy in
-# development, Django's own static files in production), so there's no
-# cross-origin cookie problem to solve and no need for a JWT/DRF-token
-# dependency on top of the session auth the rest of the app already uses.
-REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.SessionAuthentication"],
-    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
-}

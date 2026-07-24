@@ -5,7 +5,7 @@ from . import views
 app_name = "portfolio"
 
 urlpatterns = [
-    path("", views.dashboard, name="dashboard"),
+    path("", views.home, name="dashboard"),
     path("holdings/", views.holdings_list, name="holdings"),
     path("holdings/export/", views.holdings_csv_export, name="holdings_csv_export"),
     path("holdings/breakdown/", views.stock_breakdown, name="stock_breakdown"),

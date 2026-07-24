@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.urls import include, path
 
 
@@ -17,21 +17,6 @@ def manifest(request):
     })
 
 
-def spa_shell(request):
-    """
-    Serves the built Svelte SPA's index.html (see frontend/). The SPA does
-    its own client-side (hash-based) routing from there, so this one view
-    is all Django needs — no wildcard path capture required.
-    """
-    index_path = settings.BASE_DIR / "static" / "app" / "index.html"
-    if not index_path.exists():
-        return HttpResponse(
-            "The SikaTrack app isn't built yet. Run `npm run build` in frontend/.",
-            status=501,
-        )
-    return FileResponse(open(index_path, "rb"), content_type="text/html")
-
-
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("manifest.json", manifest, name="manifest"),
@@ -42,14 +27,7 @@ urlpatterns = [
     path("watchlist/", include("watchlist.urls")),
     path("calendar/", include("corporate_actions.urls")),
     path("market/", include("instruments.urls")),
-    path("api/", include("api.urls")),
-    path("app/", spa_shell, name="spa_shell"),
-    # The Svelte PWA is the primary UI now — it owns the bare root. The
-    # portfolio.urls include below still serves everything else (holdings
-    # detail, transaction forms, the analysis pages) since those haven't
-    # all been ported into the SPA yet; this only claims the exact "/"
-    # dashboard route that used to render a classic template there.
-    path("", spa_shell, name="home"),
+    path("news/", include("news.urls")),
     path("", include("portfolio.urls")),
 ]
 

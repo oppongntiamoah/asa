@@ -1,0 +1,44 @@
+<div id="news-content">
+    <div class="flex flex-wrap gap-2 mb-6">
+        <button
+            hx-get="{% url 'news:list' %}"
+            hx-target="#news-content"
+            hx-swap="outerHTML"
+            hx-push-url="{% url 'news:list' %}"
+            class="text-xs font-medium px-3 py-1.5 rounded-full {% if not active_category %}bg-emerald-600 text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+            All
+        </button>
+        {% for value, label in categories %}
+        <button
+            hx-get="{% url 'news:list' %}?category={{ value }}"
+            hx-target="#news-content"
+            hx-swap="outerHTML"
+            hx-push-url="true"
+            class="text-xs font-medium px-3 py-1.5 rounded-full {% if active_category == value %}bg-emerald-600 text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+            {{ label }}
+        </button>
+        {% endfor %}
+    </div>
+
+    {% if articles %}
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for a in articles %}
+        <a href="{% url 'news:detail' a.slug %}" class="block bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-emerald-300 transition-colors">
+            {% if a.image %}
+                <img src="{{ a.image.url }}" alt="" class="w-full h-36 object-cover">
+            {% else %}
+                <div class="w-full h-36 bg-gradient-to-br from-emerald-50 to-gray-100"></div>
+            {% endif %}
+            <div class="p-4">
+                <span class="text-xs font-semibold uppercase tracking-wide text-emerald-700">{{ a.get_category_display }}</span>
+                <h2 class="font-semibold mt-1 mb-2 leading-snug">{{ a.title }}</h2>
+                <p class="text-sm text-gray-500 mb-3">{{ a.display_summary }}</p>
+                <p class="text-xs text-gray-400">{{ a.published_at|date:"j M Y" }} · {{ a.published_at|date:"H:i" }}</p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-500">No articles yet.</p>
+    {% endif %}
+</div>

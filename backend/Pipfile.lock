@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "bd30b9deb105bc0e81595b36778c249e7cf7691546c69c9e04c4b538e190a522"
+            "sha256": "2a0c39959e06f6c53bbcafcf15e912e7cfd9eb7ffd275312954b8c6579ce9154"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -135,7 +135,7 @@
                 "sha256:fb62edb5bb52cca65fab91a63afa7561607120d26090a7e8fda6fb9f064726da",
                 "sha256:ff067a8d8d880e7809e4ac88eb009bb848870115317b306666502ccad30b147f"
             ],
-            "markers": "platform_python_implementation != 'PyPy'",
+            "markers": "python_version >= '3.10'",
             "version": "==2.1.0"
         },
         "charset-normalizer": {
@@ -331,15 +331,6 @@
             "index": "pypi",
             "markers": "python_version >= '3.9' and python_version < '4'",
             "version": "==1.10.0"
-        },
-        "djangorestframework": {
-            "hashes": [
-                "sha256:a6def5f447fe78ff853bff1d47a3c59bf38f5434b031780b351b0c73a62db1a5",
-                "sha256:c3c74dd3e83a5a3efc37b3c18d92bd6f86a6791c7b7d4dff62bb068500e76457"
-            ],
-            "index": "pypi",
-            "markers": "python_version >= '3.10'",
-            "version": "==3.17.1"
         },
         "idna": {
             "hashes": [
@@ -538,7 +529,7 @@
                 "sha256:600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29",
                 "sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
             ],
-            "markers": "implementation_name != 'PyPy'",
+            "markers": "python_version >= '3.10'",
             "version": "==3.0"
         },
         "pypdfium2": {
@@ -601,14 +592,6 @@
             ],
             "markers": "python_version >= '3.9'",
             "version": "==3.9.0"
-        },
-        "tzdata": {
-            "hashes": [
-                "sha256:4a1518b8993086a7982523e071643f3c0e5f213e75b21318e78bcabfff9d1415",
-                "sha256:dc096730c87af6cab1b171c9d532be840741ff5d459015e7f6947bd7d7e54931"
-            ],
-            "markers": "sys_platform == 'win32'",
-            "version": "==2026.3"
         },
         "urllib3": {
             "hashes": [

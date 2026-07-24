@@ -64,6 +64,25 @@ def _holdings_rows(user, query="", sort_by="market_value", direction="desc"):
     return rows
 
 
+def home(request):
+    """
+    Root URL: a marketing landing page for anonymous visitors, the real
+    dashboard for signed-in users — so "/" works for both without a
+    redirect-to-login detour losing the pitch for people who aren't
+    signed up yet.
+    """
+    if request.user.is_authenticated:
+        return dashboard(request)
+
+    from instruments.services import market_snapshot
+    from news.models import NewsArticle
+
+    return render(request, "portfolio/landing.html", {
+        "latest_news": NewsArticle.objects.filter(is_published=True)[:3],
+        "snapshot": market_snapshot(limit=5),
+    })
+
+
 @login_required
 def dashboard(request):
     summary = portfolio_summary(request.user)
