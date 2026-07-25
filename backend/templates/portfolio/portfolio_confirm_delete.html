@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Delete portfolio — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-4">Delete "{{ portfolio.name }}"?</h1>
+
+{% if can_delete %}
+<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800">
+    This permanently deletes every transaction, holding, and cash balance in this portfolio. This can't be undone.
+</div>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="bg-red-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-red-700">Delete portfolio</button>
+    <a href="{% url 'portfolio:portfolios' %}" class="ml-3 text-sm text-gray-500">Cancel</a>
+</form>
+{% else %}
+<div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 text-sm text-gray-600">
+    This is your only portfolio — you need at least one. Create another portfolio first if you want to delete this one.
+</div>
+<a href="{% url 'portfolio:portfolios' %}" class="text-sm text-emerald-700">← Back to portfolios</a>
+{% endif %}
+{% endblock %}

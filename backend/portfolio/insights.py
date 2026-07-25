@@ -7,18 +7,14 @@ simple and documented inline so they're auditable, not a black box.
 from collections import defaultdict
 from decimal import Decimal
 
-from django.contrib.auth import get_user_model
-
 from dividends.services import dividend_dashboard
 from portfolio.models import Holding, Transaction
-
-User = get_user_model()
 
 CONCENTRATION_POSITION_WARNING_PCT = 25
 CONCENTRATION_SECTOR_WARNING_PCT = 40
 
 
-def concentration_and_health(user):
+def concentration_and_health(portfolio):
     """
     Diversification score: 100 * (1 - HHI), where HHI (Herfindahl-Hirschman
     Index) is the sum of each holding's portfolio-weight-squared. A single
@@ -34,7 +30,7 @@ def concentration_and_health(user):
     """
     from portfolio.services import portfolio_summary, sector_allocation
 
-    summary = portfolio_summary(user)
+    summary = portfolio_summary(portfolio)
     holdings = summary["holdings"]
     total_value = summary["total_value"]
 
@@ -67,7 +63,7 @@ def concentration_and_health(user):
                 if top3_pct >= 60:
                     warnings.append(f"Your top 3 positions account for {top3_pct:.0f}% of your portfolio.")
 
-    sectors = sector_allocation(user)
+    sectors = sector_allocation(portfolio)
     largest_sector = sectors[0] if sectors else None
     if largest_sector and largest_sector["pct"] >= CONCENTRATION_SECTOR_WARNING_PCT:
         warnings.append(
@@ -93,7 +89,7 @@ def concentration_and_health(user):
     }
 
 
-def rule_based_insights(user):
+def rule_based_insights(portfolio):
     """
     Plain-Python generated observations from existing data — explicitly
     NOT an LLM call. Kept as a separate function so swapping in real AI
@@ -102,11 +98,11 @@ def rule_based_insights(user):
     """
     from portfolio.services import portfolio_summary
 
-    summary = portfolio_summary(user)
+    summary = portfolio_summary(portfolio)
     holdings = summary["holdings"]
     insights = []
 
-    risk = concentration_and_health(user)
+    risk = concentration_and_health(portfolio)
     insights.extend(risk["warnings"])
 
     priced_holdings = [(h, h.unrealized_pnl_percent()) for h in holdings]
@@ -121,7 +117,7 @@ def rule_based_insights(user):
     if summary["total_realized_pnl"] > 0:
         insights.append(f"You've realized GHS {summary['total_realized_pnl']:.2f} in profits so far.")
 
-    dividends = dividend_dashboard(user)
+    dividends = dividend_dashboard(portfolio)
     annual = dividends["annual_series"]
     if len(annual) >= 2 and annual[-1]["growth_pct"] is not None:
         direction = "up" if annual[-1]["growth_pct"] >= 0 else "down"
@@ -130,7 +126,7 @@ def rule_based_insights(user):
     return insights
 
 
-def cash_flow_analysis(user):
+def cash_flow_analysis(portfolio):
     """
     Investment activity (buys/sells) by month — NOT a full cash-flow
     statement. SikaTrack doesn't have a cash ledger (deposits/withdrawals
@@ -139,7 +135,7 @@ def cash_flow_analysis(user):
     equity positions within the tracked portfolio.
     """
     by_month = defaultdict(lambda: {"invested": Decimal("0"), "divested": Decimal("0")})
-    for t in Transaction.objects.filter(user=user):
+    for t in Transaction.objects.filter(portfolio=portfolio):
         key = t.trade_date.strftime("%Y-%m")
         if t.transaction_type == Transaction.BUY:
             by_month[key]["invested"] += t.gross_amount + t.fees
@@ -153,7 +149,7 @@ def cash_flow_analysis(user):
     return rows
 
 
-def realized_gains_by_year(user):
+def realized_gains_by_year(portfolio):
     """
     Realized gains bucketed by calendar year of the sell transaction,
     replaying each instrument's transaction history to get the average
@@ -162,7 +158,7 @@ def realized_gains_by_year(user):
     of only the final aggregate).
     """
     by_instrument = defaultdict(list)
-    for t in Transaction.objects.filter(user=user).order_by("trade_date", "created_at", "id"):
+    for t in Transaction.objects.filter(portfolio=portfolio).order_by("trade_date", "created_at", "id"):
         by_instrument[t.instrument_id].append(t)
 
     by_year = defaultdict(Decimal)
@@ -183,21 +179,21 @@ def realized_gains_by_year(user):
     return [{"year": y, "realized_gain": by_year[y]} for y in sorted(by_year.keys())]
 
 
-def portfolio_timeline(user):
+def portfolio_timeline(portfolio):
     """Chronological feed of buy/sell transactions and dividend receipts.
     Stock splits and cash deposits/withdrawals aren't included — neither is
     modeled in SikaTrack yet."""
     from dividends.models import DividendReceipt
 
     events = []
-    for t in Transaction.objects.filter(user=user).select_related("instrument"):
+    for t in Transaction.objects.filter(portfolio=portfolio).select_related("instrument"):
         events.append({
             "date": t.trade_date,
             "kind": t.transaction_type,
             "description": f"{t.transaction_type.title()} {t.quantity} {t.instrument.ticker} @ GHS {t.price_per_share}",
             "amount": t.gross_amount,
         })
-    for r in DividendReceipt.objects.filter(user=user).select_related("dividend_record", "dividend_record__instrument"):
+    for r in DividendReceipt.objects.filter(portfolio=portfolio).select_related("dividend_record", "dividend_record__instrument"):
         effective_date = r.dividend_record.payment_date or r.dividend_record.ex_dividend_date
         events.append({
             "date": effective_date,

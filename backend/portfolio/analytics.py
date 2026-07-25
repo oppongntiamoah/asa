@@ -27,20 +27,20 @@ def _price_on_or_before(sorted_bars, target_date):
     return sorted_bars[idx][1] if idx >= 0 else None
 
 
-def portfolio_value_series(user):
+def portfolio_value_series(portfolio):
     """
     Reconstructs total portfolio value at each distinct price date, by
     replaying transaction history against price history. One point per
     distinct PriceBar trade_date across ever-held instruments, from the
-    user's first transaction onward.
+    portfolio's first transaction onward.
 
     An instrument with no price bar on/before a given date is excluded
     from that day's total rather than assumed worthless — the same
     "unpriced" convention used on the dashboard.
 
-    Returns [] if the user has no transactions.
+    Returns [] if the portfolio has no transactions.
     """
-    transactions = list(Transaction.objects.filter(user=user).order_by("trade_date", "created_at", "id"))
+    transactions = list(Transaction.objects.filter(portfolio=portfolio).order_by("trade_date", "created_at", "id"))
     if not transactions:
         return []
 
@@ -228,31 +228,31 @@ def xirr(cash_flows, guess=0.1):
     return None
 
 
-def portfolio_xirr(user):
+def portfolio_xirr(portfolio):
     """Builds the cash-flow series (buys negative, sells/dividends positive,
     plus a final flow of today's market value) and solves XIRR on it."""
     from dividends.models import DividendReceipt
     from portfolio.services import portfolio_summary
 
     flows = []
-    for t in Transaction.objects.filter(user=user):
+    for t in Transaction.objects.filter(portfolio=portfolio):
         amount = t.gross_amount + t.fees if t.transaction_type == Transaction.BUY else t.gross_amount - t.fees
         flows.append((t.trade_date, -amount if t.transaction_type == Transaction.BUY else amount))
 
-    for receipt in DividendReceipt.objects.filter(user=user).select_related("dividend_record"):
+    for receipt in DividendReceipt.objects.filter(portfolio=portfolio).select_related("dividend_record"):
         pay_date = receipt.dividend_record.payment_date or receipt.dividend_record.ex_dividend_date
         flows.append((pay_date, receipt.total_amount))
 
-    summary = portfolio_summary(user)
+    summary = portfolio_summary(portfolio)
     if summary["total_value"] > 0:
         flows.append((date.today(), summary["total_value"]))
 
     return xirr(flows)
 
 
-def holdings_correlation(user):
+def holdings_correlation(portfolio):
     """
-    Pairwise Pearson correlation of daily returns between the user's
+    Pairwise Pearson correlation of daily returns between the portfolio's
     currently-held instruments, using their price history. Thin/sparse
     trading on GSE means these numbers are noisy for low-volume stocks —
     callers should caveat this in the UI rather than present it as precise.
@@ -260,7 +260,7 @@ def holdings_correlation(user):
     """
     from portfolio.models import Holding
 
-    holdings = list(Holding.objects.filter(user=user).select_related("instrument"))
+    holdings = list(Holding.objects.filter(portfolio=portfolio).select_related("instrument"))
     if len(holdings) < 2:
         return {}
 
@@ -305,16 +305,16 @@ def _pearson(xs, ys):
     return cov / ((var_x ** 0.5) * (var_y ** 0.5))
 
 
-def average_holding_period_days(user):
+def average_holding_period_days(portfolio):
     """
     Approximation, not exact lot-level FIFO tracking: per instrument, the
     buy-quantity-weighted average acquisition date vs. either the last sell
     date (if the position is now fully closed) or today (if still open).
     Returns the simple average across instruments in days, or None if the
-    user has no buy transactions.
+    portfolio has no buy transactions.
     """
     by_instrument = defaultdict(list)
-    for t in Transaction.objects.filter(user=user).order_by("trade_date"):
+    for t in Transaction.objects.filter(portfolio=portfolio).order_by("trade_date"):
         by_instrument[t.instrument_id].append(t)
 
     holding_periods = []

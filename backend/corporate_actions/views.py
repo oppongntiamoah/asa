@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
 from dividends.models import DividendRecord
+from portfolio.context import get_active_portfolio
 from portfolio.models import Holding
 from watchlist.models import WatchlistItem
 
@@ -17,7 +18,7 @@ def calendar_view(request):
     year = int(request.GET.get("year", today.year))
     month = int(request.GET.get("month", today.month))
 
-    instrument_ids = set(Holding.objects.filter(user=request.user).values_list("instrument_id", flat=True))
+    instrument_ids = set(Holding.objects.filter(portfolio=get_active_portfolio(request)).values_list("instrument_id", flat=True))
     instrument_ids |= set(WatchlistItem.objects.filter(user=request.user).values_list("instrument_id", flat=True))
 
     actions = CorporateAction.objects.filter(

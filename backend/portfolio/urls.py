@@ -24,4 +24,9 @@ urlpatterns = [
     path("analysis/tax/", views.tax_summary_view, name="tax_summary"),
     path("analysis/timeline/", views.timeline_view, name="timeline"),
     path("cash-balance/update/", views.update_cash_balance, name="update_cash_balance"),
+    path("portfolios/", views.portfolios_view, name="portfolios"),
+    path("portfolios/new/", views.portfolio_create, name="portfolio_create"),
+    path("portfolios/<int:portfolio_id>/switch/", views.portfolio_switch, name="portfolio_switch"),
+    path("portfolios/<int:portfolio_id>/rename/", views.portfolio_rename, name="portfolio_rename"),
+    path("portfolios/<int:portfolio_id>/delete/", views.portfolio_delete, name="portfolio_delete"),
 ]

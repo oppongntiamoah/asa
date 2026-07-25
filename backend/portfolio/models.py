@@ -2,12 +2,36 @@ from django.conf import settings
 from django.db import models
 
 
+class Portfolio(models.Model):
+    """
+    A fully separate ledger — its own transactions, holdings, and cash
+    balance — so a user can track e.g. a personal account and a retirement
+    account side by side without their positions mixing. Every user has at
+    least one (auto-created on signup); how many more they can add is
+    capped by their billing.Plan.max_portfolios.
+    """
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="portfolios")
+    name = models.CharField(max_length=100)
+    is_default = models.BooleanField(
+        default=False,
+        help_text="The portfolio a user lands on when no other is selected. Exactly one per user.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"{self.name} ({self.user})"
+
+
 class Transaction(models.Model):
     BUY = "BUY"
     SELL = "SELL"
     TYPE_CHOICES = [(BUY, "Buy"), (SELL, "Sell")]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="transactions")
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name="transactions")
     instrument = models.ForeignKey("instruments.Instrument", on_delete=models.PROTECT, related_name="transactions")
     transaction_type = models.CharField(max_length=4, choices=TYPE_CHOICES)
     quantity = models.DecimalField(max_digits=14, decimal_places=4)
@@ -23,7 +47,7 @@ class Transaction(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        indexes = [models.Index(fields=["user", "instrument", "trade_date"])]
+        indexes = [models.Index(fields=["portfolio", "instrument", "trade_date"], name="portfolio_t_portf_trd_idx")]
         ordering = ["-trade_date", "-created_at"]
 
     def __str__(self):
@@ -36,13 +60,13 @@ class Transaction(models.Model):
 
 class Holding(models.Model):
     """
-    Cached/computed snapshot, one row per (user, instrument), rebuilt whenever
-    that user's transactions for that instrument change. Not the source of
-    truth (Transaction is) — exists so dashboard reads don't recompute from
-    full transaction history on every page load.
+    Cached/computed snapshot, one row per (portfolio, instrument), rebuilt
+    whenever that portfolio's transactions for that instrument change. Not
+    the source of truth (Transaction is) — exists so dashboard reads don't
+    recompute from full transaction history on every page load.
     """
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="holdings")
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name="holdings")
     instrument = models.ForeignKey("instruments.Instrument", on_delete=models.CASCADE, related_name="holdings")
     quantity = models.DecimalField(max_digits=14, decimal_places=4, default=0)
     average_cost = models.DecimalField(max_digits=12, decimal_places=4, default=0)
@@ -51,12 +75,12 @@ class Holding(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["user", "instrument"], name="uniq_holding_per_user_instrument")
+            models.UniqueConstraint(fields=["portfolio", "instrument"], name="uniq_holding_per_portfolio_instrument")
         ]
         ordering = ["instrument__ticker"]
 
     def __str__(self):
-        return f"{self.user} — {self.instrument.ticker}: {self.quantity}"
+        return f"{self.portfolio} — {self.instrument.ticker}: {self.quantity}"
 
     @property
     def cost_basis(self):
@@ -90,9 +114,9 @@ class CashBalance(models.Model):
     breakdown alongside equities/funds/fixed income.
     """
 
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="cash_balance")
+    portfolio = models.OneToOneField(Portfolio, on_delete=models.CASCADE, related_name="cash_balance")
     amount_ghs = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.user} — GHS {self.amount_ghs}"
+        return f"{self.portfolio} — GHS {self.amount_ghs}"

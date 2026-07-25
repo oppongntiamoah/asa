@@ -18,6 +18,6 @@ class DividendRecordAdmin(admin.ModelAdmin):
 
 @admin.register(DividendReceipt)
 class DividendReceiptAdmin(admin.ModelAdmin):
-    list_display = ("user", "dividend_record", "quantity_held", "total_amount")
-    search_fields = ("user__username",)
-    autocomplete_fields = ("user", "dividend_record")
+    list_display = ("portfolio", "dividend_record", "quantity_held", "total_amount")
+    search_fields = ("portfolio__name", "portfolio__user__username")
+    autocomplete_fields = ("portfolio", "dividend_record")

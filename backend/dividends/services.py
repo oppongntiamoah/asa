@@ -1,25 +1,21 @@
-"""Generates per-user DividendReceipt rows from an admin-entered DividendRecord,
-and dashboard aggregates over those receipts."""
+"""Generates per-portfolio DividendReceipt rows from an admin-entered
+DividendRecord, and dashboard aggregates over those receipts."""
 from collections import defaultdict
 from datetime import date, timedelta
 from decimal import Decimal
 
-from django.contrib.auth import get_user_model
-
-from portfolio.models import Holding, Transaction
+from portfolio.models import Holding, Portfolio, Transaction
 
 from .models import DividendReceipt, DividendRecord
 
-User = get_user_model()
 
-
-def _quantity_held_as_of(user, instrument, as_of_date) -> Decimal:
+def _quantity_held_as_of(portfolio, instrument, as_of_date) -> Decimal:
     """Replays transactions up to and including as_of_date to find the
     quantity held on the dividend's record date — Holding only tracks the
     *current* quantity, which isn't necessarily what was held historically."""
     quantity = Decimal("0")
     txns = Transaction.objects.filter(
-        user=user, instrument=instrument, trade_date__lte=as_of_date
+        portfolio=portfolio, instrument=instrument, trade_date__lte=as_of_date
     ).order_by("trade_date", "created_at", "id")
     for txn in txns:
         quantity += txn.quantity if txn.transaction_type == Transaction.BUY else -txn.quantity
@@ -29,18 +25,18 @@ def _quantity_held_as_of(user, instrument, as_of_date) -> Decimal:
 def generate_receipts_for_dividend(dividend_record):
     """Idempotent: safe to call again if the DividendRecord is edited."""
     instrument = dividend_record.instrument
-    user_ids = Transaction.objects.filter(instrument=instrument).values_list("user_id", flat=True).distinct()
+    portfolio_ids = Transaction.objects.filter(instrument=instrument).values_list("portfolio_id", flat=True).distinct()
 
     created_or_updated = []
-    for user in User.objects.filter(id__in=user_ids):
-        quantity_held = _quantity_held_as_of(user, instrument, dividend_record.record_date)
+    for portfolio in Portfolio.objects.filter(id__in=portfolio_ids):
+        quantity_held = _quantity_held_as_of(portfolio, instrument, dividend_record.record_date)
         if quantity_held <= 0:
-            DividendReceipt.objects.filter(user=user, dividend_record=dividend_record).delete()
+            DividendReceipt.objects.filter(portfolio=portfolio, dividend_record=dividend_record).delete()
             continue
 
         total_amount = quantity_held * dividend_record.amount_per_share
         receipt, _ = DividendReceipt.objects.update_or_create(
-            user=user,
+            portfolio=portfolio,
             dividend_record=dividend_record,
             defaults={"quantity_held": quantity_held, "total_amount": total_amount},
         )
@@ -48,9 +44,9 @@ def generate_receipts_for_dividend(dividend_record):
     return created_or_updated
 
 
-def dividend_dashboard(user):
+def dividend_dashboard(portfolio):
     """Aggregate dividend figures for the dividend dashboard page."""
-    receipts = DividendReceipt.objects.filter(user=user).select_related(
+    receipts = DividendReceipt.objects.filter(portfolio=portfolio).select_related(
         "dividend_record", "dividend_record__instrument"
     )
     today = date.today()
@@ -75,7 +71,7 @@ def dividend_dashboard(user):
             trailing_12mo_by_instrument[r.dividend_record.instrument_id] += r.total_amount
 
     # Portfolio dividend yield: trailing-12-month dividend income / current cost basis.
-    holdings = Holding.objects.filter(user=user).select_related("instrument")
+    holdings = Holding.objects.filter(portfolio=portfolio).select_related("instrument")
     total_cost_basis = sum((h.cost_basis for h in holdings), Decimal("0"))
     trailing_12mo_total = sum(trailing_12mo_by_instrument.values(), Decimal("0"))
     portfolio_yield_pct = (trailing_12mo_total / total_cost_basis * 100) if total_cost_basis else None
@@ -88,7 +84,7 @@ def dividend_dashboard(user):
     per_holding_yield.sort(key=lambda x: x["trailing_12mo_received"], reverse=True)
 
     upcoming = DividendRecord.objects.filter(
-        instrument__holdings__user=user, ex_dividend_date__gte=today
+        instrument__holdings__portfolio=portfolio, ex_dividend_date__gte=today
     ).distinct().order_by("ex_dividend_date")[:10]
 
     sorted_months = sorted(monthly_income.keys())[-12:]

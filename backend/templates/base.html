@@ -111,7 +111,8 @@
                     portfolio: {% if is_portfolio %}true{% else %}false{% endif %},
                     analysis: {% if is_analysis %}true{% else %}false{% endif %},
                     market: {% if is_market %}true{% else %}false{% endif %}
-                }
+                },
+                portfolioMenuOpen: false
             }"
         >
             <div class="px-5 py-5 flex items-center gap-2 border-b border-neutral-800">
@@ -119,7 +120,35 @@
                 <span class="font-bold text-white">SikaTrack</span>
             </div>
 
-            <div class="px-3 pt-4">
+            <div class="px-3 pt-3 relative">
+                <button @click="portfolioMenuOpen = !portfolioMenuOpen" class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-sm text-white">
+                    <span class="flex items-center gap-2 min-w-0">
+                        {% icon "holdings" "w-4 h-4 text-neutral-400" %}
+                        <span class="truncate">{{ active_portfolio.name }}</span>
+                    </span>
+                    <span class="transition-transform shrink-0" :class="portfolioMenuOpen ? 'rotate-180' : ''">{% icon "chevron-down" "w-4 h-4 text-neutral-500" %}</span>
+                </button>
+                <div x-show="portfolioMenuOpen" x-cloak @click.outside="portfolioMenuOpen = false" class="absolute left-3 right-3 mt-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-lg z-10 py-1" style="display: none">
+                    {% for p in user_portfolios %}
+                        {% if p.id == active_portfolio.id %}
+                        <div class="px-3 py-2 text-sm text-white flex items-center justify-between">
+                            <span class="truncate">{{ p.name }}</span>
+                            <span class="text-[10px] text-emerald-400 font-semibold shrink-0">ACTIVE</span>
+                        </div>
+                        {% else %}
+                        <form method="post" action="{% url 'portfolio:portfolio_switch' p.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left px-3 py-2 text-sm text-neutral-300 hover:bg-neutral-800 truncate">{{ p.name }}</button>
+                        </form>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="border-t border-neutral-800 mt-1 pt-1">
+                        <a href="{% url 'portfolio:portfolios' %}" class="block px-3 py-2 text-sm text-neutral-400 hover:text-white hover:bg-neutral-800">Manage portfolios</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-3 pt-3">
                 <a href="{% url 'portfolio:transaction_add' %}" class="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium">
                     {% icon "plus" "w-4 h-4" %} Add transaction
                 </a>
@@ -130,7 +159,7 @@
                     {% icon "home" %} Dashboard
                 </a>
 
-                <p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-600">Portfolio</p>
+                <p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-600">Holdings</p>
                 <button @click="open.portfolio = !open.portfolio" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg mb-0.5 hover:bg-neutral-900 hover:text-white {% if is_portfolio %}text-white{% endif %}">
                     <span class="flex items-center gap-3">{% icon "holdings" %} Holdings & Activity</span>
                     <span class="transition-transform" :class="open.portfolio ? 'rotate-180' : ''">{% icon "chevron-down" "w-4 h-4 text-neutral-500" %}</span>
@@ -310,12 +339,17 @@
                 <button @click="menuOpen = false" class="text-gray-400 p-1 shrink-0">{% icon "close" "w-5 h-5" %}</button>
             </div>
 
+            <a href="{% url 'portfolio:portfolios' %}" class="flex items-center justify-between gap-3 px-5 py-3 border-b border-gray-100 text-sm">
+                <span class="flex items-center gap-2 text-gray-500">{% icon "holdings" "w-4 h-4" %} Portfolio</span>
+                <span class="font-medium text-gray-900 truncate">{{ active_portfolio.name }} →</span>
+            </a>
+
             <div class="p-5">
                 <a href="{% url 'portfolio:transaction_add' %}" class="flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium mb-5">
                     {% icon "plus" "w-4 h-4" %} Add transaction
                 </a>
 
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2 mb-1">Portfolio</p>
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2 mb-1">Holdings</p>
                 <a href="{% url 'portfolio:holdings' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if url_name == 'holdings' or url_name == 'holding_detail' or url_name == 'stock_breakdown' %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "holdings" "w-4 h-4" %}Holdings & Breakdown</a>
                 <a href="{% url 'portfolio:transaction_list' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if url_name == 'transaction_list' %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "transactions" "w-4 h-4" %}Transaction History</a>
                 <a href="{% url 'statements:upload' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if 'statements' in ns %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "statements" "w-4 h-4" %}Upload Statement</a>

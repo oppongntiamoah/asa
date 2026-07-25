@@ -24,11 +24,16 @@ class SignUpView(CreateView):
     def form_valid(self, form):
         response = super().form_valid(form)
         login(self.request, self.object)
+
+        from portfolio.models import Portfolio
+
+        Portfolio.objects.create(user=self.object, name="Default", is_default=True)
         return response
 
 
 @login_required
 def settings_view(request):
+    from portfolio.context import get_active_portfolio
     from portfolio.forms import CashBalanceForm
     from portfolio.models import CashBalance
 
@@ -41,7 +46,7 @@ def settings_view(request):
     else:
         form = ProfileForm(instance=request.user)
 
-    cash_balance, _ = CashBalance.objects.get_or_create(user=request.user)
+    cash_balance, _ = CashBalance.objects.get_or_create(portfolio=get_active_portfolio(request))
     cash_form = CashBalanceForm(instance=cash_balance)
     return render(request, "accounts/settings.html", {"form": form, "cash_form": cash_form})
 
@@ -50,15 +55,21 @@ def settings_view(request):
 def export_data(request):
     """Data export (CSV of transactions) — also doubles as part of the
     Ghana Data Protection Act 'right to access' story: a user can pull
-    their own data any time, not just via a manual request to the founder."""
+    their own data any time, not just via a manual request to the founder.
+    Covers every portfolio the user has, not just the active one — this is
+    an export of everything SikaTrack holds about them, not a portfolio
+    report."""
     from portfolio.models import Transaction
 
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="sikatrack_transactions.csv"'
     writer = csv.writer(response)
-    writer.writerow(["Date", "Type", "Symbol", "Quantity", "Price", "Fees", "Broker", "Notes"])
-    for t in Transaction.objects.filter(user=request.user).select_related("instrument").order_by("trade_date"):
-        writer.writerow([t.trade_date, t.transaction_type, t.instrument.ticker, t.quantity, t.price_per_share, t.fees, t.broker, t.notes])
+    writer.writerow(["Portfolio", "Date", "Type", "Symbol", "Quantity", "Price", "Fees", "Broker", "Notes"])
+    txns = Transaction.objects.filter(portfolio__user=request.user).select_related(
+        "instrument", "portfolio"
+    ).order_by("portfolio__name", "trade_date")
+    for t in txns:
+        writer.writerow([t.portfolio.name, t.trade_date, t.transaction_type, t.instrument.ticker, t.quantity, t.price_per_share, t.fees, t.broker, t.notes])
     return response
 
 

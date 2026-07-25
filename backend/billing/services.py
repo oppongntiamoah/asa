@@ -56,13 +56,27 @@ def consume_credit(user, credit_type: str) -> None:
 
 def grant_plan_credits(user, plan: Plan) -> CreditBalance:
     """Adds a purchased plan's credit allotment on top of whatever the user
-    already has — one-time purchases stack rather than reset a balance."""
+    already has — one-time purchases stack rather than reset a balance.
+    max_portfolios is a cap, not a spendable credit, so it's raised to the
+    plan's level rather than added — buying BASIC after PRO shouldn't push
+    it back down, and buying PRO twice shouldn't double it."""
     balance = get_or_create_balance(user)
     for credit_type, field in CREDIT_FIELDS.items():
         plan_amount = getattr(plan, field)
         setattr(balance, field, getattr(balance, field) + plan_amount)
+    balance.max_portfolios = max(balance.max_portfolios, plan.max_portfolios)
     balance.save()
     return balance
+
+
+def max_portfolios_for_user(user) -> int:
+    """How many portfolios this user may create. Uncapped while billing is
+    off, mirroring has_credit()'s free-for-everyone behavior — once billing
+    is on, it's the free-tier default (1) unless raised by a purchased
+    plan."""
+    if not is_billing_enabled():
+        return 10_000
+    return get_or_create_balance(user).max_portfolios
 
 
 def confirm_purchase(purchase: Purchase) -> None:

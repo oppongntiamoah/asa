@@ -81,9 +81,10 @@ def detail(request, ticker):
         ("All-time", analytics.all_time_return(all_bars)),
     ]
 
+    from portfolio.context import get_active_portfolio
     from portfolio.models import Holding
 
-    holding = Holding.objects.filter(user=request.user, instrument=instrument).first()
+    holding = Holding.objects.filter(portfolio=get_active_portfolio(request), instrument=instrument).first()
 
     return render(
         request,

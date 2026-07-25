@@ -16,14 +16,14 @@ class InsufficientHoldingError(ValueError):
     """Raised when a sell would take a holding negative — no short positions in MVP."""
 
 
-def recalculate_holding(user, instrument):
+def recalculate_holding(portfolio, instrument):
     """
-    Replays all transactions for (user, instrument) in trade_date order and
+    Replays all transactions for (portfolio, instrument) in trade_date order and
     rebuilds the Holding row. Called synchronously after any transaction
     create/update/delete — volumes are low enough (dozens to low hundreds of
-    transactions per user) that this is cheap; no need to make it async.
+    transactions per portfolio) that this is cheap; no need to make it async.
     """
-    txns = Transaction.objects.filter(user=user, instrument=instrument).order_by("trade_date", "created_at", "id")
+    txns = Transaction.objects.filter(portfolio=portfolio, instrument=instrument).order_by("trade_date", "created_at", "id")
 
     quantity = Decimal("0")
     total_cost = Decimal("0")
@@ -42,11 +42,11 @@ def recalculate_holding(user, instrument):
     average_cost = (total_cost / quantity) if quantity else Decimal("0")
 
     if quantity <= 0:
-        Holding.objects.filter(user=user, instrument=instrument).delete()
+        Holding.objects.filter(portfolio=portfolio, instrument=instrument).delete()
         return None
 
     holding, _ = Holding.objects.update_or_create(
-        user=user,
+        portfolio=portfolio,
         instrument=instrument,
         defaults={
             "quantity": quantity,
@@ -57,8 +57,8 @@ def recalculate_holding(user, instrument):
     return holding
 
 
-def current_holding_quantity(user, instrument, exclude_transaction_id=None) -> Decimal:
-    txns = Transaction.objects.filter(user=user, instrument=instrument)
+def current_holding_quantity(portfolio, instrument, exclude_transaction_id=None) -> Decimal:
+    txns = Transaction.objects.filter(portfolio=portfolio, instrument=instrument)
     if exclude_transaction_id:
         txns = txns.exclude(id=exclude_transaction_id)
 
@@ -69,16 +69,16 @@ def current_holding_quantity(user, instrument, exclude_transaction_id=None) -> D
 
 
 @db_transaction.atomic
-def create_transaction(*, user, instrument, transaction_type, quantity, price_per_share, fees, trade_date, broker="", notes="", source_statement=None):
+def create_transaction(*, portfolio, instrument, transaction_type, quantity, price_per_share, fees, trade_date, broker="", notes="", source_statement=None):
     if transaction_type == Transaction.SELL:
-        held = current_holding_quantity(user, instrument)
+        held = current_holding_quantity(portfolio, instrument)
         if quantity > held:
             raise InsufficientHoldingError(
                 f"Cannot sell {quantity} shares of {instrument.ticker} — you hold {held}."
             )
 
     txn = Transaction.objects.create(
-        user=user,
+        portfolio=portfolio,
         instrument=instrument,
         transaction_type=transaction_type,
         quantity=quantity,
@@ -89,32 +89,32 @@ def create_transaction(*, user, instrument, transaction_type, quantity, price_pe
         notes=notes,
         source_statement=source_statement,
     )
-    recalculate_holding(user, instrument)
+    recalculate_holding(portfolio, instrument)
     return txn
 
 
 @db_transaction.atomic
 def delete_transaction(transaction: Transaction):
-    user, instrument = transaction.user, transaction.instrument
+    portfolio, instrument = transaction.portfolio, transaction.instrument
     transaction.delete()
-    recalculate_holding(user, instrument)
+    recalculate_holding(portfolio, instrument)
 
 
-def total_invested_ever(user) -> Decimal:
+def total_invested_ever(portfolio) -> Decimal:
     """Sum of every BUY's cost (gross + fees) across all time — the
     denominator for a whole-account total-return %, distinct from
     total_cost_basis which only reflects currently-open positions."""
     total = Decimal("0")
-    for txn in Transaction.objects.filter(user=user, transaction_type=Transaction.BUY):
+    for txn in Transaction.objects.filter(portfolio=portfolio, transaction_type=Transaction.BUY):
         total += txn.gross_amount + txn.fees
     return total
 
 
-def todays_change(user):
+def todays_change(portfolio):
     """Dollar and % change in portfolio value from the prior close to the
     latest close, across currently-held instruments. None values (rather
     than 0) when there isn't a second price point yet to compare against."""
-    holdings = Holding.objects.filter(user=user).select_related("instrument")
+    holdings = Holding.objects.filter(portfolio=portfolio).select_related("instrument")
     change_amount = Decimal("0")
     prior_total = Decimal("0")
     have_comparison = False
@@ -134,17 +134,17 @@ def todays_change(user):
     return {"amount": change_amount, "pct": pct}
 
 
-def get_cash_balance(user) -> Decimal:
-    balance = CashBalance.objects.filter(user=user).first()
+def get_cash_balance(portfolio) -> Decimal:
+    balance = CashBalance.objects.filter(portfolio=portfolio).first()
     return balance.amount_ghs if balance else Decimal("0")
 
 
-def portfolio_summary(user):
+def portfolio_summary(portfolio):
     """Aggregate figures for the dashboard header. total_value includes
     cash — the founder's real brokerage statement showed cash as ~1.5% of
     total portfolio value, and omitting it would make this figure
     systematically wrong, not just incomplete."""
-    holdings = Holding.objects.filter(user=user).select_related("instrument")
+    holdings = Holding.objects.filter(portfolio=portfolio).select_related("instrument")
 
     total_value = Decimal("0")
     total_cost_basis = Decimal("0")
@@ -158,7 +158,7 @@ def portfolio_summary(user):
         else:
             has_stale_price = True
 
-    cash_balance = get_cash_balance(user)
+    cash_balance = get_cash_balance(portfolio)
     total_value += cash_balance
 
     total_unrealized_pnl = (total_value - cash_balance) - total_cost_basis
@@ -167,7 +167,7 @@ def portfolio_summary(user):
     )
     total_realized_pnl = sum((h.realized_pnl for h in holdings), Decimal("0"))
 
-    invested_ever = total_invested_ever(user)
+    invested_ever = total_invested_ever(portfolio)
     total_return_pct = (
         ((total_unrealized_pnl + total_realized_pnl) / invested_ever) * 100 if invested_ever else None
     )
@@ -190,19 +190,19 @@ def portfolio_summary(user):
         "total_realized_pnl": total_realized_pnl,
         "total_return_pct": total_return_pct,
         "num_holdings": holdings.count(),
-        "todays_change": todays_change(user),
+        "todays_change": todays_change(portfolio),
         "has_stale_price": has_stale_price,
-        "asset_class_allocation": asset_class_allocation(user, total_value, holdings, cash_balance),
+        "asset_class_allocation": asset_class_allocation(portfolio, total_value, holdings, cash_balance),
     }
 
 
-def asset_class_allocation(user, total_value=None, holdings=None, cash_balance=None):
+def asset_class_allocation(portfolio, total_value=None, holdings=None, cash_balance=None):
     """Breakdown matching the founder's real IC Securities Portfolio
     Summary table: Equities / Funds / Fixed Income / Cash, by value."""
     if holdings is None:
-        holdings = Holding.objects.filter(user=user).select_related("instrument")
+        holdings = Holding.objects.filter(portfolio=portfolio).select_related("instrument")
     if cash_balance is None:
-        cash_balance = get_cash_balance(user)
+        cash_balance = get_cash_balance(portfolio)
 
     by_class = {code: Decimal("0") for code, _ in Instrument.ASSET_CLASS_CHOICES}
     has_unpriced = False
@@ -228,9 +228,9 @@ def asset_class_allocation(user, total_value=None, holdings=None, cash_balance=N
     return {"rows": result, "has_unpriced": has_unpriced}
 
 
-def sector_allocation(user):
+def sector_allocation(portfolio):
     """Current holdings grouped by Instrument.sector, by market value."""
-    holdings = Holding.objects.filter(user=user).select_related("instrument")
+    holdings = Holding.objects.filter(portfolio=portfolio).select_related("instrument")
     by_sector = {}
     total_value = Decimal("0")
 
@@ -250,13 +250,13 @@ def sector_allocation(user):
     return result
 
 
-def transaction_analysis(user):
+def transaction_analysis(portfolio):
     """Buy/sell activity statistics for the Transaction Analysis page."""
     from collections import defaultdict
 
     from .analytics import average_holding_period_days
 
-    txns = list(Transaction.objects.filter(user=user).select_related("instrument"))
+    txns = list(Transaction.objects.filter(portfolio=portfolio).select_related("instrument"))
     buys = [t for t in txns if t.transaction_type == Transaction.BUY]
     sells = [t for t in txns if t.transaction_type == Transaction.SELL]
 
@@ -286,15 +286,15 @@ def transaction_analysis(user):
         "avg_purchase_price": avg_purchase_price,
         "largest_purchase": largest_purchase,
         "largest_sale": largest_sale,
-        "avg_holding_period_days": average_holding_period_days(user),
+        "avg_holding_period_days": average_holding_period_days(portfolio),
         "monthly": monthly,
         "trading_frequency_per_month": trading_frequency,
     }
 
 
-def cost_basis_table(user):
+def cost_basis_table(portfolio):
     """Per-holding cost basis breakdown for the Cost Basis Analysis page."""
-    holdings = Holding.objects.filter(user=user).select_related("instrument")
+    holdings = Holding.objects.filter(portfolio=portfolio).select_related("instrument")
     rows = []
     for h in holdings:
         current_price = h.latest_price()
@@ -311,9 +311,9 @@ def cost_basis_table(user):
     return rows
 
 
-def sector_performance(user):
+def sector_performance(portfolio):
     """Weighted return per sector, for the Sector Analysis page."""
-    holdings = Holding.objects.filter(user=user).select_related("instrument")
+    holdings = Holding.objects.filter(portfolio=portfolio).select_related("instrument")
     by_sector = {}
 
     for h in holdings:
@@ -343,21 +343,21 @@ def sector_performance(user):
     return result
 
 
-def winners_losers(user, limit=10):
+def winners_losers(portfolio, limit=10):
     """Splits top_movers into gainers (best first) and losers (worst first)
     among currently-held instruments."""
-    movers = top_movers(user, limit=None)
+    movers = top_movers(portfolio, limit=None)
     gainers = sorted((m for m in movers if m["change_pct"] > 0), key=lambda m: m["change_pct"], reverse=True)
     losers = sorted((m for m in movers if m["change_pct"] < 0), key=lambda m: m["change_pct"])
     return {"gainers": gainers[:limit], "losers": losers[:limit]}
 
 
-def top_movers(user, limit=5):
-    """Stocks among the user's holdings with the largest daily % move."""
+def top_movers(portfolio, limit=5):
+    """Stocks among the portfolio's holdings with the largest daily % move."""
     from instruments.models import PriceBar
 
     movers = []
-    for holding in Holding.objects.filter(user=user).select_related("instrument"):
+    for holding in Holding.objects.filter(portfolio=portfolio).select_related("instrument"):
         bars = list(holding.instrument.price_bars.all()[:2])
         if len(bars) < 2 or bars[1].close_price == 0:
             continue
@@ -373,12 +373,12 @@ def top_movers(user, limit=5):
     return movers[:limit]
 
 
-def movers_by_volume(user, limit=5):
+def movers_by_volume(portfolio, limit=5):
     """Held instruments ranked by latest trading volume (most active),
     highest first. Distinct from price-change movers — a stock can be
     flat in price but have unusually high turnover."""
     rows = []
-    for holding in Holding.objects.filter(user=user).select_related("instrument"):
+    for holding in Holding.objects.filter(portfolio=portfolio).select_related("instrument"):
         latest = holding.instrument.price_bars.first()
         if latest is None or latest.volume is None:
             continue
@@ -392,12 +392,12 @@ def movers_by_volume(user, limit=5):
     return rows[:limit]
 
 
-def movers_by_value(user, limit=5):
+def movers_by_value(portfolio, limit=5):
     """Held instruments ranked by latest turnover value (GHS traded),
     highest first — GSE's own 'Total Value Traded' figure, not volume ×
     close (which wouldn't match VWAP-based reporting)."""
     rows = []
-    for holding in Holding.objects.filter(user=user).select_related("instrument"):
+    for holding in Holding.objects.filter(portfolio=portfolio).select_related("instrument"):
         latest = holding.instrument.price_bars.first()
         if latest is None or latest.turnover_value is None:
             continue
@@ -411,13 +411,13 @@ def movers_by_value(user, limit=5):
     return rows[:limit]
 
 
-def market_movers(user, limit=5):
+def market_movers(portfolio, limit=5):
     """All mover dimensions for the dashboard: price gainers/losers, most
     active by volume, most active by value traded."""
-    wl = winners_losers(user, limit=limit)
+    wl = winners_losers(portfolio, limit=limit)
     return {
         "gainers": wl["gainers"],
         "losers": wl["losers"],
-        "volume_leaders": movers_by_volume(user, limit=limit),
-        "value_leaders": movers_by_value(user, limit=limit),
+        "volume_leaders": movers_by_volume(portfolio, limit=limit),
+        "value_leaders": movers_by_value(portfolio, limit=limit),
     }

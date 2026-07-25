@@ -54,6 +54,9 @@ class Plan(models.Model):
     dividend_alert_credits = models.PositiveIntegerField(default=0)
     data_export_credits = models.PositiveIntegerField(default=0)
     max_devices = models.PositiveIntegerField(default=1)
+    max_portfolios = models.PositiveIntegerField(
+        default=1, help_text="How many portfolios a user on this plan can create.",
+    )
 
     feature_bullets = models.JSONField(
         default=list, blank=True,
@@ -93,13 +96,18 @@ class Purchase(models.Model):
 
 
 class CreditBalance(models.Model):
-    """Running per-user credit balances. Purchases add to these; features spend them."""
+    """Running per-user credit balances. Purchases add to these; features spend them.
+
+    max_portfolios isn't a spendable credit like the others — it's a cap,
+    so a purchase raises it to the plan's level (if higher) rather than
+    adding to it the way credits stack."""
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="credit_balance")
     pdf_processing_credits = models.IntegerField(default=0)
     stock_alert_credits = models.IntegerField(default=0)
     dividend_alert_credits = models.IntegerField(default=0)
     data_export_credits = models.IntegerField(default=0)
+    max_portfolios = models.PositiveIntegerField(default=1)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load icons %}
+{% block title %}Portfolios — SikaTrack{% endblock %}
+{% block content %}
+<div class="flex justify-between items-center mb-1">
+    <h1 class="text-xl font-bold">Portfolios</h1>
+    {% if can_create %}
+    <a href="{% url 'portfolio:portfolio_create' %}" class="flex items-center gap-2 text-sm font-medium bg-emerald-600 text-white px-3 py-2 rounded-lg hover:bg-emerald-700">
+        {% icon "plus" "w-4 h-4" %} New portfolio
+    </a>
+    {% endif %}
+</div>
+<p class="text-sm text-gray-500 mb-6">
+    Each portfolio is a fully separate set of holdings, transactions, and cash balance — like tracking
+    separate brokerage accounts side by side. You're using {{ portfolios|length }}{% if not unlimited %} of {{ limit }}{% endif %}.
+</p>
+
+{% if not can_create %}
+<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800">
+    You've reached your plan's limit of {{ limit }} portfolio{{ limit|pluralize }}.
+    <a href="{% url 'billing:pricing' %}" class="font-medium underline">Upgrade</a> to add more.
+</div>
+{% endif %}
+
+<div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
+    {% for p in portfolios %}
+    <div class="p-4 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+            <div class="flex items-center gap-2">
+                <p class="font-medium truncate">{{ p.name }}</p>
+                {% if p.id == active_portfolio.id %}
+                <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Active</span>
+                {% endif %}
+                {% if p.is_default %}
+                <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Default</span>
+                {% endif %}
+            </div>
+            <p class="text-xs text-gray-400">Created {{ p.created_at|date:"j M Y" }}</p>
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+            {% if p.id != active_portfolio.id %}
+            <form method="post" action="{% url 'portfolio:portfolio_switch' p.id %}">
+                {% csrf_token %}
+                <button type="submit" class="text-xs font-medium text-emerald-700 border border-emerald-200 rounded-lg px-3 py-1.5 hover:bg-emerald-50">Switch</button>
+            </form>
+            {% endif %}
+            <a href="{% url 'portfolio:portfolio_rename' p.id %}" class="text-xs text-gray-500 px-3 py-1.5 hover:text-gray-900">Rename</a>
+            {% if portfolios|length > 1 %}
+            <a href="{% url 'portfolio:portfolio_delete' p.id %}" class="text-xs text-red-500 px-3 py-1.5 hover:text-red-700">Delete</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

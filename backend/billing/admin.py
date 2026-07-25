@@ -28,7 +28,7 @@ class BillingSettingsAdmin(admin.ModelAdmin):
 
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
-    list_display = ("code", "name", "price_ghs", "pdf_processing_credits", "is_active", "sort_order")
+    list_display = ("code", "name", "price_ghs", "pdf_processing_credits", "max_portfolios", "is_active", "sort_order")
     list_editable = ("is_active", "sort_order")
     search_fields = ("code", "name")
 
@@ -44,6 +44,6 @@ class PurchaseAdmin(admin.ModelAdmin):
 
 @admin.register(CreditBalance)
 class CreditBalanceAdmin(admin.ModelAdmin):
-    list_display = ("user", "pdf_processing_credits", "stock_alert_credits", "dividend_alert_credits", "data_export_credits")
+    list_display = ("user", "pdf_processing_credits", "stock_alert_credits", "dividend_alert_credits", "data_export_credits", "max_portfolios")
     search_fields = ("user__username",)
     autocomplete_fields = ("user",)

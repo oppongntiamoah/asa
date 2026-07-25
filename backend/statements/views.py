@@ -8,6 +8,7 @@ from django.utils import timezone
 from django_q.tasks import async_task
 
 from billing.services import consume_credit, get_or_create_balance, has_credit, is_billing_enabled
+from portfolio.context import get_active_portfolio
 from portfolio.services import InsufficientHoldingError, create_transaction
 
 from .forms import ExtractedTransactionFormSet, StatementUploadForm
@@ -82,13 +83,14 @@ def review(request, pk):
                 # Sort by trade_date so sells within the same statement never
                 # land before the buy that funded them purely due to PDF row order.
                 to_commit.sort(key=lambda r: r.trade_date)
+                active_portfolio = get_active_portfolio(request)
                 try:
                     with db_transaction.atomic():
                         for row in to_commit:
                             row.is_confirmed = True
                             row.save()
                             create_transaction(
-                                user=request.user,
+                                portfolio=active_portfolio,
                                 instrument=row.matched_instrument,
                                 transaction_type=row.transaction_type,
                                 quantity=row.quantity,
