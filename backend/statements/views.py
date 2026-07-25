@@ -9,6 +9,8 @@ from django_q.tasks import async_task
 
 from billing.services import consume_credit, get_or_create_balance, has_credit, is_billing_enabled
 from portfolio.context import get_active_portfolio
+from portfolio.forms import CashBalanceForm
+from portfolio.models import CashBalance
 from portfolio.services import InsufficientHoldingError, create_transaction, delete_transaction
 
 from .forms import ExtractedTransactionFormSet, StatementUploadForm
@@ -143,7 +145,24 @@ def review(request, pk):
 def confirmed(request, pk):
     statement = get_object_or_404(StatementUpload, pk=pk, user=request.user, status=StatementUpload.CONFIRMED)
     count = statement.committed_transactions.count()
-    return render(request, "statements/confirmed.html", {"statement": statement, "count": count})
+    active_portfolio = get_active_portfolio(request)
+    cash_balance, _ = CashBalance.objects.get_or_create(portfolio=active_portfolio)
+
+    if request.method == "POST":
+        cash_form = CashBalanceForm(request.POST, instance=cash_balance)
+        if cash_form.is_valid():
+            cash_form.save()
+            messages.success(request, "Cash balance updated.")
+            return redirect("statements:confirmed", pk=statement.pk)
+    else:
+        cash_form = CashBalanceForm(instance=cash_balance)
+
+    return render(request, "statements/confirmed.html", {
+        "statement": statement,
+        "count": count,
+        "cash_form": cash_form,
+        "cash_balance": cash_balance,
+    })
 
 
 @login_required
