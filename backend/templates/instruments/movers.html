@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load dictutils %}
+{% block title %}Market Movers — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-1">Market Movers</h1>
+<p class="text-sm text-gray-500 mb-4">Rankings across every actively-tracked instrument, not just what you hold.</p>
+
+<div class="flex text-xs border border-gray-200 divide-x divide-gray-200 rounded-lg overflow-hidden w-fit mb-6">
+    {% for p in periods %}
+        <a href="?period={{ p }}" class="px-3 py-1.5 {% if p == period %}bg-emerald-600 text-white{% else %}bg-white text-gray-500 hover:bg-gray-50{% endif %}">{{ period_labels|dict_get:p }}</a>
+    {% endfor %}
+</div>
+
+{% if breadth.as_of %}
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <div class="flex justify-between items-center mb-3">
+        <p class="text-sm font-semibold">Market breadth</p>
+        <p class="text-xs text-gray-400">as of {{ breadth.as_of }}</p>
+    </div>
+    <div class="flex rounded-full overflow-hidden h-3 bg-gray-100">
+        {% widthratio breadth.gainers breadth.gainers|add:breadth.losers|add:breadth.unchanged 100 as gpct %}
+        {% widthratio breadth.losers breadth.gainers|add:breadth.losers|add:breadth.unchanged 100 as lpct %}
+        <div class="bg-emerald-500 h-3" style="width: {{ gpct|default:0 }}%"></div>
+        <div class="bg-gray-300 h-3" style="width: {% widthratio breadth.unchanged breadth.gainers|add:breadth.losers|add:breadth.unchanged 100 %}%"></div>
+        <div class="bg-red-500 h-3" style="width: {{ lpct|default:0 }}%"></div>
+    </div>
+    <div class="flex justify-between text-xs mt-2">
+        <span class="text-emerald-700">{{ breadth.gainers }} gainers</span>
+        <span class="text-gray-500">{{ breadth.unchanged }} unchanged</span>
+        <span class="text-red-600">{{ breadth.losers }} losers</span>
+    </div>
+</div>
+{% endif %}
+
+<div class="grid gap-4 lg:grid-cols-2 mb-6">
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <p class="text-sm font-semibold mb-3">Top gainers — {{ period_label }}</p>
+        {% for r in gainers %}
+        <a href="{% url 'instruments:detail' r.instrument.ticker %}" class="flex justify-between text-sm py-2 border-t border-gray-100 first:border-0">
+            <span class="font-medium">{{ r.instrument.ticker }}</span>
+            <span class="text-emerald-700">+{{ r.change_pct|floatformat:1 }}%</span>
+        </a>
+        {% empty %}
+        <p class="text-sm text-gray-400">Not enough data for this period yet.</p>
+        {% endfor %}
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <p class="text-sm font-semibold mb-3">Top losers — {{ period_label }}</p>
+        {% for r in losers %}
+        <a href="{% url 'instruments:detail' r.instrument.ticker %}" class="flex justify-between text-sm py-2 border-t border-gray-100 first:border-0">
+            <span class="font-medium">{{ r.instrument.ticker }}</span>
+            <span class="text-red-600">{{ r.change_pct|floatformat:1 }}%</span>
+        </a>
+        {% empty %}
+        <p class="text-sm text-gray-400">Not enough data for this period yet.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-2">
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <p class="text-sm font-semibold mb-3">Most traded — avg. shares/day</p>
+        {% for r in most_traded %}
+        <a href="{% url 'instruments:detail' r.instrument.ticker %}" class="flex justify-between text-sm py-2 border-t border-gray-100 first:border-0">
+            <span class="font-medium">{{ r.instrument.ticker }}</span>
+            <span class="text-gray-500">{{ r.avg_volume|floatformat:0 }}</span>
+        </a>
+        {% empty %}
+        <p class="text-sm text-gray-400">No volume data recorded yet.</p>
+        {% endfor %}
+    </div>
+    <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <p class="text-sm font-semibold mb-3">Highest turnover — avg. GHS/day</p>
+        {% for r in highest_turnover %}
+        <a href="{% url 'instruments:detail' r.instrument.ticker %}" class="flex justify-between text-sm py-2 border-t border-gray-100 first:border-0">
+            <span class="font-medium">{{ r.instrument.ticker }}</span>
+            <span class="text-gray-500">{{ r.avg_value|floatformat:0 }}</span>
+        </a>
+        {% empty %}
+        <p class="text-sm text-gray-400">No turnover data recorded yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

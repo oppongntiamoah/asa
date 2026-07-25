@@ -50,3 +50,79 @@ def price_history(instrument, days=None):
         qs = qs.order_by("-trade_date")[:days]
         return list(reversed(list(qs)))
     return list(qs)
+
+
+def top_movers(days=30, limit=10):
+    """Active instruments ranked by close-price % change over the trailing
+    `days` calendar days. Returns (gainers, losers), each sorted with the
+    biggest mover first. Skips instruments without a bar that old."""
+    from .analytics import period_return
+
+    rows = []
+    for instrument in Instrument.objects.filter(is_active=True):
+        bars = list(instrument.price_bars.order_by("trade_date"))
+        if len(bars) < 2:
+            continue
+        pct = period_return(bars, days)
+        if pct is None:
+            continue
+        rows.append({
+            "instrument": instrument,
+            "change_pct": pct,
+            "close_price": bars[-1].close_price,
+            "trade_date": bars[-1].trade_date,
+        })
+
+    gainers = sorted((r for r in rows if r["change_pct"] > 0), key=lambda r: r["change_pct"], reverse=True)[:limit]
+    losers = sorted((r for r in rows if r["change_pct"] < 0), key=lambda r: r["change_pct"])[:limit]
+    return gainers, losers
+
+
+def most_traded(days=30, limit=10):
+    """Active instruments ranked by average daily shares traded over the
+    trailing window, counting only bars that carry a volume figure."""
+    rows = []
+    for instrument in Instrument.objects.filter(is_active=True):
+        bars = instrument.price_bars.order_by("-trade_date")[:days]
+        volumes = [b.volume for b in bars if b.volume is not None]
+        if not volumes:
+            continue
+        rows.append({"instrument": instrument, "avg_volume": sum(volumes) / len(volumes)})
+    rows.sort(key=lambda r: r["avg_volume"], reverse=True)
+    return rows[:limit]
+
+
+def highest_turnover(days=30, limit=10):
+    """Active instruments ranked by average daily GH¢ value traded over the
+    trailing window, counting only bars that carry a turnover figure."""
+    rows = []
+    for instrument in Instrument.objects.filter(is_active=True):
+        bars = instrument.price_bars.order_by("-trade_date")[:days]
+        values = [float(b.turnover_value) for b in bars if b.turnover_value is not None]
+        if not values:
+            continue
+        rows.append({"instrument": instrument, "avg_value": sum(values) / len(values)})
+    rows.sort(key=lambda r: r["avg_value"], reverse=True)
+    return rows[:limit]
+
+
+def market_breadth():
+    """Gainers/losers/unchanged among active instruments, each compared to
+    its own immediately-prior close — not necessarily the same calendar
+    date across instruments, since GSE tickers don't all trade every day."""
+    gainers = losers = unchanged = 0
+    latest_date = None
+    for instrument in Instrument.objects.filter(is_active=True):
+        bars = list(instrument.price_bars.all()[:2])
+        if len(bars) < 2 or not bars[1].close_price or bars[0].close_price is None:
+            continue
+        if latest_date is None or bars[0].trade_date > latest_date:
+            latest_date = bars[0].trade_date
+        change = bars[0].close_price - bars[1].close_price
+        if change > 0:
+            gainers += 1
+        elif change < 0:
+            losers += 1
+        else:
+            unchanged += 1
+    return {"gainers": gainers, "losers": losers, "unchanged": unchanged, "as_of": latest_date}

@@ -18,7 +18,7 @@
     <div class="flex justify-between items-center mb-4">
         <p class="text-sm font-semibold">Price history</p>
         {% if candle_svg %}
-        <div class="flex text-xs border border-gray-200 rounded-lg overflow-hidden">
+        <div class="flex text-xs border border-gray-200 divide-x divide-gray-200 rounded-lg overflow-hidden">
             <button type="button" @click="chartType = 'line'" :class="chartType === 'line' ? 'bg-emerald-600 text-white' : 'bg-white text-gray-500'" class="px-3 py-1">Line</button>
             <button type="button" @click="chartType = 'candle'" :class="chartType === 'candle' ? 'bg-emerald-600 text-white' : 'bg-white text-gray-500'" class="px-3 py-1">Candle</button>
         </div>

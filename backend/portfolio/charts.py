@@ -105,3 +105,36 @@ def svg_candle_chart(bars, width=600, height=180, up_color="#059669", down_color
         + "</svg>"
     )
     return svg, has_range
+
+
+def svg_volume_chart(bars, width=600, height=48, color="#9ca3af33"):
+    """bars: chronological PriceBar-like objects. One bar per day using
+    `volume`; days without a volume figure are just skipped (not drawn as
+    zero), since GSE's earliest ingested rows may predate that field.
+    Returns None if no bar in the series carries a volume at all."""
+    if not any(b.volume is not None for b in bars):
+        return None
+
+    max_v = max((b.volume for b in bars if b.volume is not None), default=0) or 1
+    n = len(bars)
+    padding = 2
+    slot_width = (width - 2 * padding) / n
+    bar_width = max(slot_width * 0.7, 1)
+
+    parts = []
+    for i, b in enumerate(bars):
+        if b.volume is None:
+            continue
+        bar_height = max((b.volume / max_v) * (height - 2 * padding), 1)
+        x = padding + slot_width * i + (slot_width - bar_width) / 2
+        y = height - padding - bar_height
+        parts.append(
+            f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_width:.1f}" '
+            f'height="{bar_height:.1f}" fill="{color}"></rect>'
+        )
+
+    return (
+        f'<svg viewBox="0 0 {width} {height}" class="w-full h-auto" preserveAspectRatio="none">'
+        + "".join(parts)
+        + "</svg>"
+    )
