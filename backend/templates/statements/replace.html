@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Replace statement — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-1">Replace this statement</h1>
+<p class="text-sm text-gray-500 mb-6">
+    Upload a new file for this {{ statement.get_broker_display }} statement.
+    {% if statement.status == 'CONFIRMED' %}
+        It already added transactions to your portfolio — those will be removed and replaced with whatever the new file produces.
+    {% endif %}
+</p>
+
+<form method="post" enctype="multipart/form-data" class="space-y-4 max-w-md">
+    {% csrf_token %}
+    {% for field in form %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+        </div>
+    {% endfor %}
+    <div class="flex gap-3">
+        <button type="submit" class="bg-emerald-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-emerald-700">Upload replacement</button>
+        <a href="{% url 'statements:list' %}" class="text-sm text-gray-500 px-4 py-2">Cancel</a>
+    </div>
+</form>
+{% endblock %}

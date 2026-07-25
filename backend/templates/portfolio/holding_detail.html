@@ -1,5 +1,10 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}{{ holding.instrument.ticker }} — SikaTrack{% endblock %}
+{% block extra_head %}
+<script src="{% static 'vendor/lightweight-charts.js' %}" defer></script>
+<script src="{% static 'js/price_chart.js' %}" defer></script>
+{% endblock %}
 {% block content %}
 <div class="mb-4">
     <h1 class="text-xl font-bold">{{ holding.instrument.ticker }}</h1>
@@ -14,24 +19,35 @@
 </div>
 
 {% if chart_svg %}
-<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6" x-data="{ chartType: 'line' }">
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
     <div class="flex justify-between items-center mb-4">
         <p class="text-sm font-semibold">Price history</p>
-        {% if candle_svg %}
-        <div class="flex text-xs border border-gray-200 divide-x divide-gray-200 rounded-lg overflow-hidden">
-            <button type="button" @click="chartType = 'line'" :class="chartType === 'line' ? 'bg-emerald-600 text-white' : 'bg-white text-gray-500'" class="px-3 py-1">Line</button>
-            <button type="button" @click="chartType = 'candle'" :class="chartType === 'candle' ? 'bg-emerald-600 text-white' : 'bg-white text-gray-500'" class="px-3 py-1">Candle</button>
+        <div class="flex items-center gap-2">
+            {% if candle_svg %}
+            <div class="flex text-xs border border-gray-200 divide-x divide-gray-200 rounded-lg overflow-hidden">
+                <button type="button" id="chart-line-btn" class="px-3 py-1 bg-emerald-600 text-white">Line</button>
+                <button type="button" id="chart-candle-btn" class="px-3 py-1 bg-white text-gray-500">Candle</button>
+            </div>
+            {% endif %}
+            <button type="button" onclick="window.SikaTrackCharts && window.SikaTrackCharts.exportChartAsImage('lw-chart', '{{ holding.instrument.ticker }}-chart')" class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-500 hover:bg-gray-50">
+                ⬇ Save image
+            </button>
         </div>
-        {% endif %}
     </div>
-    <div x-show="chartType === 'line'" class="privacy-blur-chart">{{ chart_svg|safe }}</div>
-    {% if candle_svg %}
-    <div x-show="chartType === 'candle'" style="display: none" class="privacy-blur-chart">{{ candle_svg|safe }}</div>
-    {% if not has_intraday_range %}
+    <div id="lw-chart" class="privacy-blur-chart" style="height: 320px">{{ chart_svg|safe }}</div>
+    {{ lw_chart_data|json_script:"lw-chart-data" }}
+    {% if candle_svg and not has_intraday_range %}
     <p class="text-xs text-gray-400 mt-3">GSE's daily data export doesn't include intraday high/low, so candles show only open/close.</p>
     {% endif %}
-    {% endif %}
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        window.SikaTrackCharts && window.SikaTrackCharts.initPriceChart(
+            "lw-chart", "lw-chart-data",
+            { lineButton: "chart-line-btn", candleButton: "chart-candle-btn" }
+        );
+    });
+</script>
 {% endif %}
 
 <h2 class="text-sm font-semibold mb-2">Transactions</h2>

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Delete statement — SikaTrack{% endblock %}
+{% block content %}
+<h1 class="text-xl font-bold mb-4">Delete this {{ statement.get_broker_display }} statement?</h1>
+
+{% if committed_count %}
+<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800">
+    This statement added {{ committed_count }} transaction{{ committed_count|pluralize }} to your portfolio.
+    Deleting it will remove {{ committed_count|yesno:"those,them" }} too, and recalculate your affected holdings.
+    This can't be undone.
+</div>
+{% else %}
+<p class="text-sm text-gray-500 mb-6">This statement hasn't added anything to your portfolio yet, so nothing else is affected.</p>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="bg-red-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-red-700">Delete statement</button>
+    <a href="{% url 'statements:list' %}" class="ml-3 text-sm text-gray-500">Cancel</a>
+</form>
+{% endblock %}

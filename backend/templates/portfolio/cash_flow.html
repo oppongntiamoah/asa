@@ -9,14 +9,16 @@
 {% else %}
 <table class="w-full text-sm">
     <thead><tr class="text-left text-xs text-gray-500 uppercase"><th class="py-1">Month</th><th class="py-1 text-right">Invested</th><th class="py-1 text-right">Divested</th><th class="py-1 text-right">Net</th></tr></thead>
+    <tbody>
     {% for r in rows %}
     <tr class="border-t border-gray-100">
         <td class="py-2">{{ r.month }}</td>
-        <td class="py-2 text-right text-red-600 money-mask">-GHS {{ r.invested|floatformat:2 }}</td>
-        <td class="py-2 text-right text-emerald-700 money-mask">GHS {{ r.divested|floatformat:2 }}</td>
-        <td class="py-2 text-right font-medium money-mask {% if r.net >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}">GHS {{ r.net|floatformat:2 }}</td>
+        <td class="py-2 text-right text-red-600"><span class="money-mask">-GHS {{ r.invested|floatformat:2 }}</span></td>
+        <td class="py-2 text-right text-emerald-700"><span class="money-mask">GHS {{ r.divested|floatformat:2 }}</span></td>
+        <td class="py-2 text-right font-medium {% if r.net >= 0 %}text-emerald-700{% else %}text-red-600{% endif %}"><span class="money-mask">GHS {{ r.net|floatformat:2 }}</span></td>
     </tr>
     {% endfor %}
+    </tbody>
 </table>
 {% endif %}
 {% endblock %}

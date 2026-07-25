@@ -254,6 +254,8 @@ def holding_detail(request, instrument_id):
 
     from instruments.services import price_history
 
+    from .charts import lightweight_chart_data
+
     bars = price_history(holding.instrument, days=180)
     chart_series = [(b.trade_date, float(b.close_price)) for b in bars if b.close_price is not None]
     candle_svg, has_intraday_range = svg_candle_chart(bars)
@@ -268,6 +270,7 @@ def holding_detail(request, instrument_id):
             "chart_svg": svg_line_chart(chart_series),
             "candle_svg": candle_svg,
             "has_intraday_range": has_intraday_range,
+            "lw_chart_data": lightweight_chart_data(bars),
         },
     )
 

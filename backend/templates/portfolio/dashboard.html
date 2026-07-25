@@ -87,7 +87,7 @@
             {% for row in asset_class_allocation.rows %}
             <tr class="border-t border-gray-100">
                 <td class="py-2">{{ row.label }}</td>
-                <td class="py-2 text-right money-mask">{{ row.value|floatformat:2 }}</td>
+                <td class="py-2 text-right"><span class="money-mask">{{ row.value|floatformat:2 }}</span></td>
                 <td class="py-2 text-right">{{ row.pct|floatformat:1 }}%</td>
             </tr>
             {% endfor %}

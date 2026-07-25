@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
 
-from portfolio.charts import svg_candle_chart, svg_line_chart, svg_volume_chart
+from portfolio.charts import lightweight_chart_data, svg_candle_chart, svg_line_chart, svg_volume_chart
 
 from . import analytics
 from .models import Instrument, PriceIngestBatch
@@ -67,6 +67,7 @@ def detail(request, ticker):
     chart_series = [(b.trade_date, float(b.close_price)) for b in chart_bars if b.close_price is not None]
     candle_svg, has_intraday_range = svg_candle_chart(chart_bars)
     volume_svg = svg_volume_chart(chart_bars)
+    lw_chart_data = lightweight_chart_data(chart_bars)
 
     change_amount, change_pct = analytics.daily_change(all_bars)
 
@@ -100,6 +101,7 @@ def detail(request, ticker):
             "candle_svg": candle_svg,
             "has_intraday_range": has_intraday_range,
             "volume_svg": volume_svg,
+            "lw_chart_data": lw_chart_data,
             "chart_range": chart_range,
             "chart_range_items": [(r, CHART_RANGE_LABELS[r]) for r in CHART_RANGES],
             "week_range": analytics.fifty_two_week_range(all_bars),

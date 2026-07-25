@@ -46,16 +46,18 @@
     </div>
     <table class="w-full text-sm">
         <thead><tr class="text-left text-xs text-gray-500 uppercase"><th class="py-1">Month</th><th class="py-1 text-right">Buys (GHS)</th><th class="py-1 text-right">Sells (GHS)</th><th class="py-1 text-right"># Txns</th></tr></thead>
+        <tbody>
         {% for m in monthly %}
         <tr class="border-t border-gray-100">
             <td class="py-2">{{ m.month }}</td>
-            <td class="py-2 text-right money-mask">{{ m.buys|floatformat:2 }}</td>
-            <td class="py-2 text-right money-mask">{{ m.sells|floatformat:2 }}</td>
+            <td class="py-2 text-right"><span class="money-mask">{{ m.buys|floatformat:2 }}</span></td>
+            <td class="py-2 text-right"><span class="money-mask">{{ m.sells|floatformat:2 }}</span></td>
             <td class="py-2 text-right">{{ m.count }}</td>
         </tr>
         {% empty %}
         <tr><td colspan="4" class="py-3 text-gray-500">No transactions yet.</td></tr>
         {% endfor %}
+        </tbody>
     </table>
 </div>
 {% endblock %}

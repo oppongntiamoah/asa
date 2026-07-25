@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Statements — SikaTrack{% endblock %}
+{% block content %}
+<div class="flex justify-between items-center mb-1">
+    <h1 class="text-xl font-bold">Statements</h1>
+    <a href="{% url 'statements:upload' %}" class="text-sm font-medium bg-emerald-600 text-white px-3 py-2 rounded-lg hover:bg-emerald-700">+ Upload</a>
+</div>
+<p class="text-sm text-gray-500 mb-6">Every broker statement you've uploaded, and what came of it.</p>
+
+{% if not statements %}
+<p class="text-sm text-gray-500">No statements uploaded yet.</p>
+{% else %}
+<div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
+    {% for s in statements %}
+    <div class="p-4 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+            <div class="flex items-center gap-2">
+                <p class="font-medium">{{ s.get_broker_display }}</p>
+                <span class="text-[11px] font-medium px-2 py-0.5 rounded-full
+                    {% if s.status == 'CONFIRMED' %}bg-emerald-50 text-emerald-700
+                    {% elif s.status == 'FAILED' %}bg-red-50 text-red-600
+                    {% elif s.status == 'NEEDS_REVIEW' %}bg-amber-50 text-amber-700
+                    {% else %}bg-gray-100 text-gray-500{% endif %}">
+                    {{ s.get_status_display }}
+                </span>
+            </div>
+            <p class="text-xs text-gray-400">
+                Uploaded {{ s.uploaded_at|date:"j M Y, H:i" }}
+                {% if s.status == 'CONFIRMED' %}· {{ s.committed_count }} transaction{{ s.committed_count|pluralize }}{% endif %}
+            </p>
+        </div>
+        <div class="flex items-center gap-1 shrink-0 text-xs">
+            {% if s.status == 'NEEDS_REVIEW' %}
+                <a href="{% url 'statements:review' s.pk %}" class="text-emerald-700 border border-emerald-200 rounded-lg px-3 py-1.5 hover:bg-emerald-50">Review</a>
+            {% elif s.status == 'CONFIRMED' %}
+                <a href="{% url 'statements:confirmed' s.pk %}" class="text-gray-500 px-3 py-1.5 hover:text-gray-900">View</a>
+            {% elif s.status == 'FAILED' %}
+                <a href="{% url 'statements:status' s.pk %}" class="text-gray-500 px-3 py-1.5 hover:text-gray-900">Details</a>
+            {% endif %}
+            <a href="{% url 'statements:replace' s.pk %}" class="text-gray-500 px-3 py-1.5 hover:text-gray-900">Replace</a>
+            <a href="{% url 'statements:delete' s.pk %}" class="text-red-500 px-3 py-1.5 hover:text-red-700">Delete</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

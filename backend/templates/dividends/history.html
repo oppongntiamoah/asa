@@ -39,13 +39,15 @@
     <p class="text-sm font-semibold mb-3">Yield by holding (trailing 12 months)</p>
     <table class="w-full text-sm">
         <thead><tr class="text-left text-xs text-gray-500 uppercase"><th class="py-1">Symbol</th><th class="py-1 text-right">Received</th><th class="py-1 text-right">Yield</th></tr></thead>
+        <tbody>
         {% for row in per_holding_yield %}
         <tr class="border-t border-gray-100">
             <td class="py-2 font-medium">{{ row.holding.instrument.ticker }}</td>
-            <td class="py-2 text-right money-mask">GHS {{ row.trailing_12mo_received|floatformat:2 }}</td>
+            <td class="py-2 text-right"><span class="money-mask">GHS {{ row.trailing_12mo_received|floatformat:2 }}</span></td>
             <td class="py-2 text-right">{% if row.yield_pct is not None %}{{ row.yield_pct|floatformat:2 }}%{% else %}—{% endif %}</td>
         </tr>
         {% endfor %}
+        </tbody>
     </table>
 </div>
 {% endif %}

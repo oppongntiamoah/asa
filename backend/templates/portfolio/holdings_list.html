@@ -38,13 +38,13 @@
         {% for r in rows %}
         <tr class="border-t border-gray-100">
             <td class="py-3 font-semibold"><a href="{% url 'portfolio:holding_detail' r.instrument.id %}">{{ r.instrument.ticker }}</a></td>
-            <td class="py-3 text-right money-mask">{{ r.quantity }}</td>
-            <td class="py-3 text-right text-gray-500 money-mask">GHS {{ r.avg_cost|floatformat:2 }}</td>
+            <td class="py-3 text-right"><span class="money-mask">{{ r.quantity }}</span></td>
+            <td class="py-3 text-right text-gray-500"><span class="money-mask">GHS {{ r.avg_cost|floatformat:2 }}</span></td>
             <td class="py-3 text-right font-medium">{% if r.current_price is not None %}GHS {{ r.current_price|floatformat:2 }}{% else %}—{% endif %}</td>
-            <td class="py-3 text-right text-gray-500 money-mask">GHS {{ r.total_invested|floatformat:2 }}</td>
-            <td class="py-3 text-right font-semibold money-mask">{% if r.market_value is not None %}GHS {{ r.market_value|floatformat:2 }}{% else %}—{% endif %}</td>
-            <td class="py-3 text-right money-mask {% if r.gain_loss and r.gain_loss >= 0 %}text-emerald-700{% elif r.gain_loss %}text-red-600{% endif %}">
-                {% if r.gain_loss is not None %}GHS {{ r.gain_loss|floatformat:2 }}{% else %}—{% endif %}
+            <td class="py-3 text-right text-gray-500"><span class="money-mask">GHS {{ r.total_invested|floatformat:2 }}</span></td>
+            <td class="py-3 text-right font-semibold"><span class="money-mask">{% if r.market_value is not None %}GHS {{ r.market_value|floatformat:2 }}{% else %}—{% endif %}</span></td>
+            <td class="py-3 text-right {% if r.gain_loss and r.gain_loss >= 0 %}text-emerald-700{% elif r.gain_loss %}text-red-600{% endif %}">
+                <span class="money-mask">{% if r.gain_loss is not None %}GHS {{ r.gain_loss|floatformat:2 }}{% else %}—{% endif %}</span>
             </td>
             <td class="py-3 text-right {% if r.pct_change and r.pct_change >= 0 %}text-emerald-700{% elif r.pct_change %}text-red-600{% endif %}">
                 {% if r.pct_change is not None %}{{ r.pct_change|floatformat:2 }}%{% else %}—{% endif %}

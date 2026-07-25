@@ -1,8 +1,10 @@
 """
-Minimal server-rendered SVG charts — deliberately not a JS charting
-library (Chart.js etc.), per the low-bandwidth/no-heavy-JS design
-constraint. Good enough for a single portfolio-value line or a per-ticker
-candlestick view; not meant to grow into a general charting library.
+Server-rendered SVG charts for the low-bandwidth default case (portfolio
+value on the dashboard, a quick sparkline), plus lightweight_chart_data()
+below which feeds TradingView's Lightweight Charts (vendored at
+static/vendor/lightweight-charts.js) for the interactive zoom/pan price
+charts on the per-ticker and holding-detail pages. The SVG functions
+still matter as the no-JS fallback baked into the initial HTML.
 """
 
 
@@ -138,3 +140,38 @@ def svg_volume_chart(bars, width=600, height=48, color="#9ca3af33"):
         + "".join(parts)
         + "</svg>"
     )
+
+
+def lightweight_chart_data(bars):
+    """Serializes chronological PriceBar-like objects into the shape
+    static/js/price_chart.js feeds to Lightweight Charts: a close-price
+    line, an OHLC candle series, and a volume histogram.
+
+    Same honesty rule as svg_candle_chart: a bar only gets a real high/low
+    wick when both are actually present (see instruments/ingest/
+    csv_ingest.py) — otherwise its candle body is derived from open/close
+    alone, never a fabricated wick.
+    """
+    line, candles, volume = [], [], []
+    for b in bars:
+        if b.close_price is None:
+            continue
+        t = b.trade_date.isoformat()
+        close = float(b.close_price)
+        line.append({"time": t, "value": close})
+
+        if b.open_price is not None:
+            open_ = float(b.open_price)
+            high = float(b.high_price) if b.high_price is not None else max(open_, close)
+            low = float(b.low_price) if b.low_price is not None else min(open_, close)
+            candles.append({"time": t, "open": open_, "high": high, "low": low, "close": close})
+
+        if b.volume is not None:
+            up = b.open_price is None or close >= float(b.open_price)
+            volume.append({
+                "time": t,
+                "value": b.volume,
+                "color": "#05966955" if up else "#dc262655",
+            })
+
+    return {"line": line, "candles": candles, "volume": volume}

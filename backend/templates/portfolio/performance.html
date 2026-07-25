@@ -60,6 +60,7 @@
     <div class="overflow-x-auto">
     <table class="text-sm">
         <thead><tr><th class="p-2"></th>{% for t in correlation_tickers %}<th class="p-2 text-xs">{{ t }}</th>{% endfor %}</tr></thead>
+        <tbody>
         {% for row in correlation_grid %}
         <tr>
             <th class="p-2 text-xs text-left">{{ row.ticker }}</th>
@@ -68,6 +69,7 @@
             {% endfor %}
         </tr>
         {% endfor %}
+        </tbody>
     </table>
     </div>
 </div>

@@ -1,4 +1,4 @@
-{% load icons nav %}
+{% load icons nav static %}
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
@@ -9,6 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
     <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
+    {% block extra_head %}{% endblock %}
     <link rel="manifest" href="{% url 'manifest' %}">
     <meta name="theme-color" content="#059669">
     <script>
@@ -72,7 +73,8 @@
             inset: 0;
             color: #9ca3af;
         }
-        .privacy-mode .privacy-blur-chart svg { filter: blur(8px); }
+        .privacy-mode .privacy-blur-chart svg,
+        .privacy-mode .privacy-blur-chart canvas { filter: blur(8px); }
     </style>
 </head>
 <body
@@ -167,7 +169,7 @@
                 <div x-show="open.portfolio" x-cloak class="pl-3 space-y-0.5 mb-1">
                     <a href="{% url 'portfolio:holdings' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'holdings' or url_name == 'holding_detail' or url_name == 'stock_breakdown' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Holdings</a>
                     <a href="{% url 'portfolio:transaction_list' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'transaction_list' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Transactions</a>
-                    <a href="{% url 'statements:upload' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'statements' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Statements</a>
+                    <a href="{% url 'statements:list' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'statements' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Statements</a>
                     <a href="{% url 'watchlist:watchlist' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'watchlist' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Watchlist</a>
                     <a href="{% url 'dividends:history' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'dividends' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Dividends</a>
                 </div>
@@ -352,7 +354,7 @@
                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2 mb-1">Holdings</p>
                 <a href="{% url 'portfolio:holdings' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if url_name == 'holdings' or url_name == 'holding_detail' or url_name == 'stock_breakdown' %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "holdings" "w-4 h-4" %}Holdings & Breakdown</a>
                 <a href="{% url 'portfolio:transaction_list' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if url_name == 'transaction_list' %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "transactions" "w-4 h-4" %}Transaction History</a>
-                <a href="{% url 'statements:upload' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if 'statements' in ns %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "statements" "w-4 h-4" %}Upload Statement</a>
+                <a href="{% url 'statements:list' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if 'statements' in ns %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "statements" "w-4 h-4" %}Statements</a>
                 <a href="{% url 'dividends:history' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if 'dividends' in ns %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "dividends" "w-4 h-4" %}Dividend Dashboard</a>
                 <a href="{% url 'watchlist:watchlist' %}" class="flex items-center gap-3 py-2 text-sm rounded-lg {% if 'watchlist' in ns %}text-emerald-700 font-medium{% else %}text-gray-700{% endif %}">{% icon "watchlist" "w-4 h-4" %}Watchlist</a>
 

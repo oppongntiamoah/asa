@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db import transaction as db_transaction
+from django.db import models, transaction as db_transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -9,10 +9,20 @@ from django_q.tasks import async_task
 
 from billing.services import consume_credit, get_or_create_balance, has_credit, is_billing_enabled
 from portfolio.context import get_active_portfolio
-from portfolio.services import InsufficientHoldingError, create_transaction
+from portfolio.services import InsufficientHoldingError, create_transaction, delete_transaction
 
 from .forms import ExtractedTransactionFormSet, StatementUploadForm
 from .models import ExtractedTransaction, StatementUpload
+
+
+def _undo_committed_transactions(statement):
+    """Removes every Transaction this statement produced, via the normal
+    delete_transaction() service (so each affected Holding gets correctly
+    recalculated) — used when deleting or replacing an already-confirmed
+    statement, since otherwise the portfolio would still reflect a
+    statement the user just removed."""
+    for txn in list(statement.committed_transactions.all()):
+        delete_transaction(txn)
 
 
 @login_required
@@ -134,3 +144,64 @@ def confirmed(request, pk):
     statement = get_object_or_404(StatementUpload, pk=pk, user=request.user, status=StatementUpload.CONFIRMED)
     count = statement.committed_transactions.count()
     return render(request, "statements/confirmed.html", {"statement": statement, "count": count})
+
+
+@login_required
+def statement_list(request):
+    statements = StatementUpload.objects.filter(user=request.user).annotate(
+        committed_count=models.Count("committed_transactions")
+    )
+    return render(request, "statements/list.html", {"statements": statements})
+
+
+@login_required
+def delete(request, pk):
+    statement = get_object_or_404(StatementUpload, pk=pk, user=request.user)
+    committed_count = statement.committed_transactions.count()
+
+    if request.method == "POST":
+        with db_transaction.atomic():
+            if committed_count:
+                _undo_committed_transactions(statement)
+            statement.delete()
+        if committed_count:
+            noun = "transaction" if committed_count == 1 else "transactions"
+            messages.success(request, f"Statement deleted and {committed_count} {noun} removed from your portfolio.")
+        else:
+            messages.success(request, "Statement deleted.")
+        return redirect("statements:list")
+
+    return render(request, "statements/confirm_delete.html", {"statement": statement, "committed_count": committed_count})
+
+
+@login_required
+def replace(request, pk):
+    """Re-uploads a new file into an existing StatementUpload record. If the
+    statement being replaced was already confirmed, its committed
+    transactions are undone first — otherwise the portfolio would carry
+    both the old statement's effect and the new one's."""
+    statement = get_object_or_404(StatementUpload, pk=pk, user=request.user)
+
+    if request.method == "POST":
+        if not has_credit(request.user, "pdf_processing"):
+            messages.error(request, "You're out of PDF processing credits.")
+            return redirect("billing:pricing")
+
+        form = StatementUploadForm(request.POST, request.FILES, instance=statement)
+        if form.is_valid():
+            with db_transaction.atomic():
+                if statement.status == StatementUpload.CONFIRMED:
+                    _undo_committed_transactions(statement)
+                ExtractedTransaction.objects.filter(statement=statement).delete()
+                new_statement = form.save(commit=False)
+                new_statement.status = StatementUpload.PENDING
+                new_statement.parse_error = ""
+                new_statement.confirmed_at = None
+                new_statement.save()
+            consume_credit(request.user, "pdf_processing")
+            async_task("statements.tasks.parse_statement", statement.id)
+            return redirect("statements:status", pk=statement.pk)
+    else:
+        form = StatementUploadForm(instance=statement)
+
+    return render(request, "statements/replace.html", {"form": form, "statement": statement})
