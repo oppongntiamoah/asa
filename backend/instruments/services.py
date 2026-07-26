@@ -6,6 +6,17 @@ portfolio.services, which only ever looks at a single user's holdings.
 from .models import Instrument, PriceBar
 
 
+def ticker_hue(ticker: str) -> int:
+    """Deterministic 0-359 hue from a ticker string — same ticker always
+    gets the same color, used for both the instrument's avatar badge and
+    matching chart segments so a ticker looks the same everywhere it
+    appears."""
+    h = 0
+    for ch in ticker or "":
+        h = (h * 31 + ord(ch)) & 0xFFFFFFFF
+    return h % 360
+
+
 def market_snapshot(limit=5):
     """
     Day-over-day movers across every actively-tracked instrument, plus the

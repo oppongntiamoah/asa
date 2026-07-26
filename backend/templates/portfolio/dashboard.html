@@ -41,89 +41,65 @@
 <p class="text-xs text-amber-600 mb-4">Some prices may be a few days old — GSE data updates once daily.</p>
 {% endif %}
 
-{% if smart_insights or health_score is not None %}
-<div class="rounded-xl p-5 mb-6 text-white" style="background: linear-gradient(135deg, #065f46, #059669 60%, #10b981);">
-    <div class="flex items-start justify-between gap-4 flex-wrap">
+<div class="rounded-2xl p-6 mb-6 text-white shadow-lg relative overflow-hidden" style="background: radial-gradient(120% 140% at 0% 0%, #10b981 0%, #059669 45%, #064e3b 100%);">
+    <div class="relative flex items-start justify-between gap-4 flex-wrap mb-5">
         <div class="min-w-0">
-            <p class="text-xs font-semibold uppercase tracking-wide text-emerald-100 mb-2">Smart insights</p>
-            {% if smart_insights %}
-            <ul class="space-y-1.5 text-sm">
-                {% for insight in smart_insights %}
-                <li class="flex items-start gap-2"><span class="mt-1">•</span><span>{{ insight }}</span></li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="text-sm text-emerald-50">Nothing notable to flag right now — your portfolio looks steady.</p>
+            <p class="text-xs font-semibold uppercase tracking-widest text-emerald-100/80 mb-1">Portfolio Value</p>
+            <p class="text-4xl sm:text-5xl font-bold tracking-tight money-mask">GHS {{ total_value|floatformat:2 }}</p>
+            {% if todays_change.amount is not None %}
+                <p class="text-sm mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full {% if todays_change.amount >= 0 %}bg-white/15 text-emerald-50{% else %}bg-black/20 text-red-100{% endif %}">
+                    <span class="money-mask">{% if todays_change.amount >= 0 %}▲{% else %}▼{% endif %} GHS {{ todays_change.amount|floatformat:2 }}</span>
+                    {% if todays_change.pct is not None %}<span>({{ todays_change.pct|floatformat:2 }}%)</span>{% endif %}
+                    <span class="text-emerald-100/70">today</span>
+                </p>
             {% endif %}
-            <a href="{% url 'portfolio:insights' %}" class="inline-block text-xs font-medium text-emerald-50 underline mt-3">See all insights →</a>
         </div>
-        {% if health_score is not None %}
-        <a href="{% url 'portfolio:risk_health' %}" class="shrink-0 text-center bg-white/10 rounded-xl px-5 py-3 hover:bg-white/20">
-            <p class="text-2xl font-bold">{{ health_score }}</p>
-            <p class="text-[11px] text-emerald-50">Health score</p>
+        {% if health_ring_svg %}
+        <a href="{% url 'portfolio:risk_health' %}" class="shrink-0 text-center group">
+            {{ health_ring_svg|safe }}
+            <p class="text-[11px] text-emerald-50/90 mt-1 group-hover:underline">Health score</p>
         </a>
         {% endif %}
     </div>
+
+    {% if hero_chart_svg %}
+    <div class="privacy-blur-chart -mx-1">{{ hero_chart_svg|safe }}</div>
+    {% endif %}
+
+    <div class="relative flex flex-wrap items-center justify-between gap-y-2 mt-5 pt-4 border-t border-white/15 text-sm">
+        <div class="flex flex-wrap gap-x-8 gap-y-2">
+            <div>
+                <p class="text-emerald-100/70 text-xs">Total Return</p>
+                <p class="font-semibold {% if total_return_pct is not None and total_return_pct < 0 %}text-red-200{% else %}text-white{% endif %}">
+                    {% if total_return_pct is not None %}{% if total_return_pct >= 0 %}+{% endif %}{{ total_return_pct|floatformat:1 }}%{% else %}—{% endif %}
+                </p>
+            </div>
+            <div>
+                <p class="text-emerald-100/70 text-xs">Realized P&L</p>
+                <p class="font-semibold money-mask">GHS {{ total_realized_pnl|floatformat:2 }}</p>
+            </div>
+            <div>
+                <p class="text-emerald-100/70 text-xs">Holdings</p>
+                <p class="font-semibold">{{ num_holdings }}</p>
+            </div>
+        </div>
+        <a href="{% url 'portfolio:performance' %}" class="text-xs font-medium text-emerald-50 hover:underline">Full performance analysis →</a>
+    </div>
+</div>
+
+{% if smart_insights %}
+<div class="bg-white border-l-4 border-emerald-500 border-y border-r border-gray-200 rounded-2xl p-5 mb-6 shadow-sm">
+    <div class="flex items-center justify-between mb-3">
+        <p class="text-sm font-semibold flex items-center gap-2"><span>💡</span> Smart insights</p>
+        <a href="{% url 'portfolio:insights' %}" class="text-xs text-emerald-700">See all →</a>
+    </div>
+    <ul class="space-y-2 text-sm text-gray-700">
+        {% for insight in smart_insights %}
+        <li class="flex items-start gap-2"><span class="text-emerald-500 mt-0.5">●</span><span>{{ insight }}</span></li>
+        {% endfor %}
+    </ul>
 </div>
 {% endif %}
-
-<div class="grid gap-4 sm:grid-cols-3 mb-6">
-    <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between mb-4">
-            <p class="text-sm text-gray-500">Portfolio Value</p>
-            <span class="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">💼</span>
-        </div>
-        <p class="text-2xl font-bold money-mask">GHS {{ total_value|floatformat:2 }}</p>
-        {% if todays_change.amount is not None %}
-            <p class="text-xs mt-1 {% if todays_change.amount >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">
-                <span class="money-mask">{% if todays_change.amount >= 0 %}+{% endif %}GHS {{ todays_change.amount|floatformat:2 }}</span> today
-                {% if todays_change.pct is not None %}({{ todays_change.pct|floatformat:2 }}%){% endif %}
-            </p>
-        {% endif %}
-    </div>
-    <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between mb-4">
-            <p class="text-sm text-gray-500">Total Return</p>
-            <span class="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">📈</span>
-        </div>
-        {% if total_return_pct is not None %}
-            <p class="text-2xl font-bold {% if total_return_pct >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">{{ total_return_pct|floatformat:1 }}%</p>
-        {% else %}
-            <p class="text-2xl font-bold text-gray-400">—</p>
-        {% endif %}
-        <p class="text-xs text-gray-400 mt-1 money-mask">Unrealized GHS {{ total_unrealized_pnl|floatformat:2 }}</p>
-    </div>
-    <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex items-center justify-between mb-4">
-            <p class="text-sm text-gray-500">Realized P&L</p>
-            <span class="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">💵</span>
-        </div>
-        <p class="text-2xl font-bold money-mask {% if total_realized_pnl >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">GHS {{ total_realized_pnl|floatformat:2 }}</p>
-        <p class="text-xs text-gray-400 mt-1">{{ num_holdings }} holding{{ num_holdings|pluralize }}</p>
-    </div>
-</div>
-
-<div class="bg-white border border-gray-200 rounded-2xl p-5 mb-6 shadow-sm">
-    <div class="flex justify-between items-center mb-4">
-        <p class="text-sm font-semibold">Portfolio Summary — <span class="money-mask">GHS {{ total_value|floatformat:2 }}</span> total</p>
-        <a href="{% url 'accounts:settings' %}" class="text-xs text-emerald-700">Update cash →</a>
-    </div>
-    <table class="w-full text-sm">
-        <thead><tr class="text-left text-xs text-gray-500 uppercase"><th class="pb-2">Asset Class</th><th class="pb-2 text-right">Value (GHS)</th><th class="pb-2 text-right">Allocation</th></tr></thead>
-        <tbody>
-            {% for row in asset_class_allocation.rows %}
-            <tr class="border-t border-gray-100">
-                <td class="py-2">{{ row.label }}</td>
-                <td class="py-2 text-right"><span class="money-mask">{{ row.value|floatformat:2 }}</span></td>
-                <td class="py-2 text-right">{{ row.pct|floatformat:1 }}%</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% if asset_class_allocation.has_unpriced %}
-        <p class="text-xs text-amber-600 mt-3">Some holdings don't have a price yet, so they're excluded from these totals.</p>
-    {% endif %}
-</div>
 
 <div class="grid gap-4 lg:grid-cols-2 mb-6">
     <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
@@ -131,16 +107,22 @@
             <p class="text-sm font-semibold">Portfolio Breakdown</p>
             <a href="{% url 'portfolio:holdings' %}" class="text-xs text-emerald-700">Full table →</a>
         </div>
-        {% for alloc in allocations %}
-            <div class="flex items-center gap-3 mb-2.5">
-                {% instrument_avatar alloc.holding.instrument "xs" %}
-                <div class="w-14 text-sm font-medium truncate">{{ alloc.holding.instrument.ticker }}</div>
-                <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
-                    <div class="h-2 rounded-full" style="width: {{ alloc.pct|floatformat:0 }}%; background: linear-gradient(90deg, #059669, #34d399);"></div>
+        {% if holdings_donut_svg %}
+        <div class="flex items-center gap-6 flex-wrap">
+            <div class="shrink-0">{{ holdings_donut_svg|safe }}</div>
+            <div class="flex-1 min-w-[160px] space-y-2">
+                {% for alloc in allocations|slice:":8" %}
+                <div class="flex items-center gap-2 text-sm">
+                    {% instrument_avatar alloc.holding.instrument "xs" %}
+                    <span class="font-medium flex-1 truncate">{{ alloc.holding.instrument.ticker }}</span>
+                    <span class="text-gray-500">{{ alloc.pct|floatformat:0 }}%</span>
                 </div>
-                <div class="w-14 text-right text-xs text-gray-500">{{ alloc.pct|floatformat:0 }}%</div>
+                {% endfor %}
             </div>
-        {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-gray-400">No priced holdings to break down yet.</p>
+        {% endif %}
 
         {% if sector_allocation %}
         <p class="text-xs font-semibold text-gray-400 uppercase mt-5 mb-3">By sector</p>
@@ -158,13 +140,23 @@
 
     <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
         <div class="flex justify-between items-center mb-4">
-            <p class="text-sm font-semibold">Portfolio Growth</p>
-            <a href="{% url 'portfolio:performance' %}" class="text-xs text-emerald-700">Full analysis →</a>
+            <p class="text-sm font-semibold">Asset Allocation — <span class="money-mask">GHS {{ total_value|floatformat:2 }}</span> total</p>
+            <a href="{% url 'accounts:settings' %}" class="text-xs text-emerald-700">Update cash →</a>
         </div>
-        {% if chart_svg %}
-            <div class="privacy-blur-chart">{{ chart_svg|safe }}</div>
-        {% else %}
-            <p class="text-sm text-gray-400">Not enough price history yet to chart growth over time.</p>
+        <table class="w-full text-sm">
+            <thead><tr class="text-left text-xs text-gray-500 uppercase"><th class="pb-2">Asset Class</th><th class="pb-2 text-right">Value (GHS)</th><th class="pb-2 text-right">Allocation</th></tr></thead>
+            <tbody>
+                {% for row in asset_class_allocation.rows %}
+                <tr class="border-t border-gray-100">
+                    <td class="py-2">{{ row.label }}</td>
+                    <td class="py-2 text-right"><span class="money-mask">{{ row.value|floatformat:2 }}</span></td>
+                    <td class="py-2 text-right">{{ row.pct|floatformat:1 }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if asset_class_allocation.has_unpriced %}
+            <p class="text-xs text-amber-600 mt-3">Some holdings don't have a price yet, so they're excluded from these totals.</p>
         {% endif %}
     </div>
 </div>

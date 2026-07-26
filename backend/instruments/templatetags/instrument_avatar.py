@@ -14,6 +14,8 @@ loads) would never generate CSS for them.
 """
 from django import template
 
+from instruments.services import ticker_hue
+
 register = template.Library()
 
 _SIZE_CLASSES = {
@@ -22,13 +24,6 @@ _SIZE_CLASSES = {
     "md": "w-10 h-10 text-sm",
     "lg": "w-14 h-14 text-lg",
 }
-
-
-def _hue_for_ticker(ticker: str) -> int:
-    h = 0
-    for ch in ticker:
-        h = (h * 31 + ord(ch)) & 0xFFFFFFFF
-    return h % 360
 
 
 def _initials_for(ticker: str, name: str) -> str:
@@ -44,7 +39,7 @@ def _initials_for(ticker: str, name: str) -> str:
 @register.inclusion_tag("instruments/_avatar.html")
 def instrument_avatar(instrument, size="sm"):
     ticker = getattr(instrument, "ticker", "") or ""
-    hue = _hue_for_ticker(ticker)
+    hue = ticker_hue(ticker)
     return {
         "instrument": instrument,
         "size_classes": _SIZE_CLASSES.get(size, _SIZE_CLASSES["sm"]),

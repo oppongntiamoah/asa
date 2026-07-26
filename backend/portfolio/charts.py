@@ -6,6 +6,59 @@ static/vendor/lightweight-charts.js) for the interactive zoom/pan price
 charts on the per-ticker and holding-detail pages. The SVG functions
 still matter as the no-JS fallback baked into the initial HTML.
 """
+import math
+
+
+def svg_donut_chart(segments, size=160, thickness=20):
+    """segments: [{"pct": float 0-100, "color": "#hex or hsl(...)"}, ...].
+    Draws each segment as a stroked arc on a shared circle (stroke-dasharray
+    trick) rather than pie wedges — simpler math, no path-arc edge cases at
+    0%/100%. Returns None if nothing to show."""
+    segments = [s for s in segments if s.get("pct", 0) > 0]
+    if not segments:
+        return None
+
+    radius = (size - thickness) / 2
+    circumference = 2 * math.pi * radius
+    cx = cy = size / 2
+    offset = 0.0
+    arcs = []
+    for s in segments:
+        dash = (s["pct"] / 100) * circumference
+        gap = max(circumference - dash, 0)
+        arcs.append(
+            f'<circle cx="{cx}" cy="{cy}" r="{radius:.2f}" fill="none" stroke="{s["color"]}" '
+            f'stroke-width="{thickness}" stroke-dasharray="{dash:.2f} {gap:.2f}" '
+            f'stroke-dashoffset="{-offset:.2f}" transform="rotate(-90 {cx} {cy})" '
+            f'stroke-linecap="butt"></circle>'
+        )
+        offset += dash
+
+    return f'<svg viewBox="0 0 {size} {size}" width="{size}" height="{size}">' + "".join(arcs) + "</svg>"
+
+
+def svg_ring_gauge(value, max_value=100, size=88, thickness=9, color="#ffffff", track_color="rgba(255,255,255,0.25)"):
+    """A single-value progress ring (health score out of 100, etc.) with
+    the number in the center. value/max_value clamped to [0, 1]."""
+    if value is None:
+        return None
+    frac = max(0.0, min(1.0, value / max_value)) if max_value else 0.0
+    radius = (size - thickness) / 2
+    circumference = 2 * math.pi * radius
+    dash = frac * circumference
+    gap = circumference - dash
+    cx = cy = size / 2
+    font_size = size * 0.28
+    return (
+        f'<svg viewBox="0 0 {size} {size}" width="{size}" height="{size}">'
+        f'<circle cx="{cx}" cy="{cy}" r="{radius:.2f}" fill="none" stroke="{track_color}" stroke-width="{thickness}"></circle>'
+        f'<circle cx="{cx}" cy="{cy}" r="{radius:.2f}" fill="none" stroke="{color}" stroke-width="{thickness}" '
+        f'stroke-dasharray="{dash:.2f} {gap:.2f}" stroke-linecap="round" '
+        f'transform="rotate(-90 {cx} {cy})"></circle>'
+        f'<text x="{cx}" y="{cy}" text-anchor="middle" dominant-baseline="central" '
+        f'font-size="{font_size:.1f}" font-weight="700" fill="{color}">{value:g}</text>'
+        f"</svg>"
+    )
 
 
 def svg_line_chart(series, width=600, height=180, stroke="#059669", fill="#05966922"):

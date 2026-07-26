@@ -7,9 +7,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from corporate_actions.models import CorporateAction
 from instruments.models import Instrument
+from instruments.services import ticker_hue
 
 from . import analytics, insights
-from .charts import svg_candle_chart, svg_line_chart
+from .charts import svg_candle_chart, svg_donut_chart, svg_line_chart, svg_ring_gauge
 from .context import get_active_portfolio, set_active_portfolio
 from .forms import CashBalanceForm, PortfolioForm, TransactionForm
 from .models import CashBalance, Holding, Portfolio, Transaction
@@ -95,6 +96,13 @@ def dashboard(request):
 
     risk = insights.concentration_and_health(active_portfolio)
     smart_insights = insights.rule_based_insights(active_portfolio)[:3]
+    health_score = risk["health_score"]
+
+    donut_segments = [
+        {"pct": float(a["pct"]), "color": f'hsl({ticker_hue(a["holding"].instrument.ticker)}, 58%, 45%)'}
+        for a in summary["allocations"][:8]
+        if a["pct"]
+    ]
 
     context = {
         **summary,
@@ -103,10 +111,13 @@ def dashboard(request):
         "sector_allocation": sector_allocation(active_portfolio),
         "winners_losers": winners_losers(active_portfolio, limit=3),
         "chart_svg": svg_line_chart(chart_series),
+        "hero_chart_svg": svg_line_chart(chart_series, height=120, stroke="#ffffff", fill="rgba(255,255,255,0.22)"),
+        "holdings_donut_svg": svg_donut_chart(donut_segments, size=140, thickness=18),
+        "health_ring_svg": svg_ring_gauge(health_score) if health_score is not None else None,
         "upcoming_actions": CorporateAction.objects.filter(
             instrument__holdings__portfolio=active_portfolio
         ).distinct().order_by("event_date")[:5],
-        "health_score": risk["health_score"],
+        "health_score": health_score,
         "smart_insights": smart_insights,
     }
     return render(request, "portfolio/dashboard.html", context)
