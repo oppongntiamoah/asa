@@ -28,9 +28,13 @@
     </form>
 </div>
 
-<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6 space-y-2">
     <p class="text-sm font-semibold mb-2">Security</p>
-    <a href="{% url 'accounts:password_change' %}" class="text-sm text-emerald-700">Change password →</a>
+    <a href="{% url 'accounts:password_change' %}" class="block text-sm text-emerald-700">Change password →</a>
+    <a href="{% url 'accounts:two_factor_status' %}" class="block text-sm text-emerald-700">
+        Two-factor authentication{% if user.totp_device and user.totp_device.confirmed %} <span class="text-xs text-emerald-600">(on)</span>{% endif %} →
+    </a>
+    <a href="{% url 'accounts:devices' %}" class="block text-sm text-emerald-700">Devices logged into your account →</a>
 </div>
 
 <div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">

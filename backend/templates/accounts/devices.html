@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Devices — SikaTrack{% endblock %}
+{% block content %}
+<a href="{% url 'accounts:settings' %}" class="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-flex items-center gap-1">← Settings</a>
+<div class="flex justify-between items-center mb-1">
+    <h1 class="text-xl font-bold">Devices</h1>
+    {% if rows|length > 1 %}
+    <form method="post" action="{% url 'accounts:revoke_all_other_devices' %}" onsubmit="return confirm('Log out every other device?');">
+        {% csrf_token %}
+        <button type="submit" class="text-xs text-red-600 border border-red-200 rounded-lg px-3 py-1.5 hover:bg-red-50">Log out all other devices</button>
+    </form>
+    {% endif %}
+</div>
+<p class="text-sm text-gray-500 mb-6">Everywhere you're currently signed in. If you don't recognize one, log it out.</p>
+
+<div class="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
+    {% for row in rows %}
+    <div class="p-4 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+            <span class="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 text-gray-500">
+                {% if row.is_mobile %}📱{% else %}💻{% endif %}
+            </span>
+            <div class="min-w-0">
+                <p class="font-medium text-sm truncate">
+                    {{ row.description }}
+                    {% if row.is_current %}<span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 ml-1">This device</span>{% endif %}
+                </p>
+                <p class="text-xs text-gray-400">
+                    {% if row.session.ip_address %}{{ row.session.ip_address }} · {% endif %}
+                    Last active {{ row.session.last_seen|timesince }} ago · Signed in {{ row.session.created_at|date:"j M Y" }}
+                </p>
+            </div>
+        </div>
+        {% if not row.is_current %}
+        <form method="post" action="{% url 'accounts:revoke_device' row.session.pk %}" class="shrink-0">
+            {% csrf_token %}
+            <button type="submit" class="text-xs text-red-600 border border-red-200 rounded-lg px-3 py-1.5 hover:bg-red-50">Log out</button>
+        </form>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p class="p-4 text-sm text-gray-500">No active sessions found.</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Verify it's you — SikaTrack{% endblock %}
+{% block content %}
+<div class="max-w-sm mx-auto mt-8">
+    <h1 class="text-xl font-bold mb-2">Verify it's you</h1>
+    <p class="text-sm text-gray-500 mb-6">Enter the 6-digit code from your authenticator app.</p>
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            {{ form.code }}
+            {% for error in form.code.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 text-white rounded-lg py-2 font-medium hover:bg-emerald-700">Verify</button>
+    </form>
+    <p class="text-xs text-gray-400 mt-4">Lost your device? Use one of your recovery codes instead of the 6-digit code above.</p>
+</div>
+{% endblock %}
