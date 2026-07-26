@@ -142,6 +142,81 @@ def review(request, pk):
 
 
 @login_required
+def edit(request, pk):
+    """Lets an already-CONFIRMED statement's extracted rows be corrected
+    without re-uploading the file (unlike Replace). Undoes the statement's
+    existing committed transactions and recommits from the edited formset,
+    via the same delete_transaction()/create_transaction() services used
+    elsewhere so Holdings stay correctly recalculated."""
+    statement = get_object_or_404(StatementUpload, pk=pk, user=request.user, status=StatementUpload.CONFIRMED)
+    queryset = ExtractedTransaction.objects.filter(statement=statement)
+
+    if request.method == "POST":
+        formset = ExtractedTransactionFormSet(request.POST, queryset=queryset)
+        if formset.is_valid():
+            to_commit = []
+            has_row_errors = False
+
+            for form in formset:
+                row = form.save(commit=False)
+                if row.is_excluded:
+                    continue
+                if not (row.matched_instrument and row.quantity and row.price_per_share and row.trade_date and row.transaction_type):
+                    form.add_error(None, "Fill in every field or exclude this row before saving.")
+                    has_row_errors = True
+                else:
+                    to_commit.append(row)
+
+            if not has_row_errors:
+                to_commit.sort(key=lambda r: r.trade_date)
+                active_portfolio = get_active_portfolio(request)
+                try:
+                    with db_transaction.atomic():
+                        _undo_committed_transactions(statement)
+                        for row in to_commit:
+                            row.is_confirmed = True
+                            row.save()
+                            create_transaction(
+                                portfolio=active_portfolio,
+                                instrument=row.matched_instrument,
+                                transaction_type=row.transaction_type,
+                                quantity=row.quantity,
+                                price_per_share=row.price_per_share,
+                                fees=row.fees,
+                                trade_date=row.trade_date,
+                                broker=statement.get_broker_display(),
+                                source_statement=statement,
+                            )
+                        for form in formset:
+                            excluded_row = form.instance
+                            if excluded_row.is_excluded:
+                                excluded_row.save()
+                        statement.confirmed_at = timezone.now()
+                        statement.save(update_fields=["confirmed_at"])
+                except InsufficientHoldingError as exc:
+                    messages.error(
+                        request,
+                        f"Couldn't save: {exc} This can happen if a sell here now outweighs what an edited "
+                        f"buy row above provides. Adjust the rows and try again.",
+                    )
+                else:
+                    messages.success(request, f"Statement updated — {len(to_commit)} transactions now on your portfolio.")
+                    return redirect("statements:confirmed", pk=statement.pk)
+    else:
+        formset = ExtractedTransactionFormSet(queryset=queryset)
+
+    rows_and_forms = list(zip(queryset, formset.forms))
+    included_count = sum(1 for row, _ in rows_and_forms if not row.is_excluded)
+    return render(
+        request, "statements/review.html",
+        {
+            "statement": statement, "formset": formset, "rows_and_forms": rows_and_forms,
+            "included_count": included_count, "is_edit": True,
+        },
+    )
+
+
+@login_required
 def confirmed(request, pk):
     statement = get_object_or_404(StatementUpload, pk=pk, user=request.user, status=StatementUpload.CONFIRMED)
     count = statement.committed_transactions.count()

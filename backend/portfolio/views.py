@@ -93,6 +93,9 @@ def dashboard(request):
     value_series = analytics.portfolio_value_series(active_portfolio)
     chart_series = [(d.isoformat(), float(v)) for d, v in value_series]
 
+    risk = insights.concentration_and_health(active_portfolio)
+    smart_insights = insights.rule_based_insights(active_portfolio)[:3]
+
     context = {
         **summary,
         "has_any_transactions": has_any_transactions,
@@ -103,6 +106,8 @@ def dashboard(request):
         "upcoming_actions": CorporateAction.objects.filter(
             instrument__holdings__portfolio=active_portfolio
         ).distinct().order_by("event_date")[:5],
+        "health_score": risk["health_score"],
+        "smart_insights": smart_insights,
     }
     return render(request, "portfolio/dashboard.html", context)
 

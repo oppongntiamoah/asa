@@ -1,9 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Review statement — SikaTrack{% endblock %}
+{% block title %}{% if is_edit %}Edit statement{% else %}Review statement{% endif %} — SikaTrack{% endblock %}
 {% block content %}
-<h1 class="text-xl font-bold mb-1">Review your transactions</h1>
+<h1 class="text-xl font-bold mb-1">{% if is_edit %}Edit this statement's transactions{% else %}Review your transactions{% endif %}</h1>
 <p class="text-sm text-gray-500 mb-1">
-    Nothing is added to your portfolio until you confirm. Rows highlighted in yellow need a closer look.
+    {% if is_edit %}
+        This statement is already confirmed — saving here removes its current transactions and recommits from what you edit below.
+    {% else %}
+        Nothing is added to your portfolio until you confirm. Rows highlighted in yellow need a closer look.
+    {% endif %}
 </p>
 <p class="text-sm text-gray-500 mb-6">
     Rows we couldn't fully read are excluded by default — uncheck "Exclude this row" and fill in the blanks to include one anyway.
@@ -61,7 +65,7 @@
     </div>
 
     <button type="submit" class="mt-6 w-full bg-emerald-600 text-white rounded-lg py-2 font-medium hover:bg-emerald-700">
-        Confirm transactions
+        {% if is_edit %}Save changes{% else %}Confirm transactions{% endif %}
     </button>
 </form>
 {% endblock %}

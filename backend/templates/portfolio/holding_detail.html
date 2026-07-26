@@ -19,16 +19,25 @@
 </div>
 
 {% if chart_svg %}
-<div class="bg-white border border-gray-200 rounded-xl p-5 mb-6">
-    <div class="flex justify-between items-center mb-4">
+<div id="lw-chart-wrapper" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-6">
+    <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
         <p class="text-sm font-semibold">Price history</p>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5 flex-wrap">
             {% if candle_svg %}
             <div class="flex text-xs border border-gray-200 divide-x divide-gray-200 rounded-lg overflow-hidden">
                 <button type="button" id="chart-line-btn" class="px-3 py-1 bg-emerald-600 text-white">Line</button>
                 <button type="button" id="chart-candle-btn" class="px-3 py-1 bg-white text-gray-500">Candle</button>
             </div>
             {% endif %}
+            <button type="button" id="chart-draw-btn" title="Draw trend lines" class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-500 hover:bg-gray-50">
+                ✏️ Draw
+            </button>
+            <button type="button" id="chart-clear-draw-btn" title="Clear drawings" class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-500 hover:bg-gray-50">
+                🧹 Clear
+            </button>
+            <button type="button" id="chart-maximize-btn" class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-500 hover:bg-gray-50">
+                ⤢ Maximize
+            </button>
             <button type="button" onclick="window.SikaTrackCharts && window.SikaTrackCharts.exportChartAsImage('lw-chart', '{{ holding.instrument.ticker }}-chart')" class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-500 hover:bg-gray-50">
                 ⬇ Save image
             </button>
@@ -44,7 +53,11 @@
     document.addEventListener("DOMContentLoaded", function () {
         window.SikaTrackCharts && window.SikaTrackCharts.initPriceChart(
             "lw-chart", "lw-chart-data",
-            { lineButton: "chart-line-btn", candleButton: "chart-candle-btn" }
+            {
+                lineButton: "chart-line-btn", candleButton: "chart-candle-btn",
+                drawButton: "chart-draw-btn", clearDrawButton: "chart-clear-draw-btn",
+                maximizeButton: "chart-maximize-btn", wrapperId: "lw-chart-wrapper",
+            }
         );
     });
 </script>

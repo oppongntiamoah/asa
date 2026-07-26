@@ -40,6 +40,32 @@
 <p class="text-xs text-amber-600 mb-4">Some prices may be a few days old — GSE data updates once daily.</p>
 {% endif %}
 
+{% if smart_insights or health_score is not None %}
+<div class="rounded-xl p-5 mb-6 text-white" style="background: linear-gradient(135deg, #065f46, #059669 60%, #10b981);">
+    <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div class="min-w-0">
+            <p class="text-xs font-semibold uppercase tracking-wide text-emerald-100 mb-2">Smart insights</p>
+            {% if smart_insights %}
+            <ul class="space-y-1.5 text-sm">
+                {% for insight in smart_insights %}
+                <li class="flex items-start gap-2"><span class="mt-1">•</span><span>{{ insight }}</span></li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-sm text-emerald-50">Nothing notable to flag right now — your portfolio looks steady.</p>
+            {% endif %}
+            <a href="{% url 'portfolio:insights' %}" class="inline-block text-xs font-medium text-emerald-50 underline mt-3">See all insights →</a>
+        </div>
+        {% if health_score is not None %}
+        <a href="{% url 'portfolio:risk_health' %}" class="shrink-0 text-center bg-white/10 rounded-xl px-5 py-3 hover:bg-white/20">
+            <p class="text-2xl font-bold">{{ health_score }}</p>
+            <p class="text-[11px] text-emerald-50">Health score</p>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 <div class="grid gap-4 sm:grid-cols-3 mb-6">
     <div class="bg-white border border-gray-200 rounded-xl p-5">
         <div class="flex items-center justify-between mb-4">
