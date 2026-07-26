@@ -53,7 +53,7 @@ class ExtractedTransaction(models.Model):
     confidence = models.CharField(
         max_length=10, choices=[("HIGH", "High"), ("LOW", "Low — needs review")], default="HIGH"
     )
-    parse_notes = models.CharField(max_length=255, blank=True)
+    parse_notes = models.TextField(blank=True)
     is_confirmed = models.BooleanField(default=False)
     is_excluded = models.BooleanField(default=False)
     row_order = models.PositiveIntegerField(default=0)

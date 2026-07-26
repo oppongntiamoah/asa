@@ -51,6 +51,24 @@ parse_notes — nothing is silently dropped or guessed at over-confidently.
 
 Other in-kind, non-IPO transfers (e.g. "Deposited 4,056 of KPLC") don't
 carry a quantity+amount pair to reconstruct from, so they stay stub rows.
+
+A second, more common real IPO pattern (verified against an actual client
+statement covering Kasapreko Company Limited's 2024 IPO) doesn't carry a
+share count anywhere in this section at all — an oversubscribed
+application gets debited in installments, then partially refunded once
+the allotment is finalized:
+
+    23/05/2026 Debit for Kasapreko IPO subscription           0.00  -1,200.00
+    23/05/2026 Debit for Kasapreko IPO subscription           0.00  -1,200.00
+    09/06/2026 Refund for Kasapreko IPO subscription       7,132.80      0.00
+
+Unlike the MTNGH pattern above, there's no second line stating shares
+allotted, so a BUY row can't be reconstructed — the allotment/confirmation
+notice (a separate document) is the only place that number exists.
+_merge_ipo_subscriptions() consolidates every debit/refund for the same
+company into one stub row with the net amount invested, rather than
+leaving 5+ scattered, individually-meaningless partial-debit rows on the
+review screen.
 """
 import re
 from collections import defaultdict
@@ -89,6 +107,18 @@ IPO_ALLOTMENT_RE = re.compile(
     re.IGNORECASE,
 )
 
+# The pattern actually seen on a real statement (Kasapreko's 2024 IPO):
+# oversubscribed applications get debited in installments, then partially
+# refunded once the allotment is finalized — with NO line anywhere stating
+# the shares allotted or the price per share, unlike the two-line pattern
+# above. See module docstring for why this can't be reconstructed into a
+# BUY row the way the MTNGH pattern can.
+IPO_SUBSCRIPTION_RE = re.compile(
+    r"^(?P<action>Debit|Refund)\s+for\s+(?P<company>.+?)\s+IPO subscription\s+"
+    r"(?P<credit>[\d,]+\.\d{2})\s+-?(?P<debit>[\d,]+\.\d{2})\s*$",
+    re.IGNORECASE,
+)
+
 # Lines mentioning these are equity-relevant even when they don't match
 # TRADE_RE or the IPO patterns above, and get flagged for manual review
 # rather than dropped.
@@ -108,6 +138,7 @@ class ICSecuritiesParser(BrokerParser):
         found_transaction_history = False
         ipo_amounts = defaultdict(list)  # (date, ticker) -> [Decimal amount, ...]
         ipo_qtys = defaultdict(list)  # (date, ticker) -> [Decimal quantity, ...]
+        ipo_subscriptions = defaultdict(lambda: {"debited": Decimal("0"), "refunded": Decimal("0"), "last_date": None})
 
         try:
             with pdfplumber.open(self.file_obj) as pdf:
@@ -118,7 +149,7 @@ class ICSecuritiesParser(BrokerParser):
                     if "Transaction History" not in text:
                         continue  # e.g. the "Account Portfolio" summary page — not the ledger
                     found_transaction_history = True
-                    self._parse_page(text, result, ipo_amounts, ipo_qtys)
+                    self._parse_page(text, result, ipo_amounts, ipo_qtys, ipo_subscriptions)
         except Exception as exc:
             raise ValueError(f"Could not read PDF as IC Securities statement: {exc}") from exc
 
@@ -129,12 +160,13 @@ class ICSecuritiesParser(BrokerParser):
             )
 
         self._merge_ipo_fragments(ipo_amounts, ipo_qtys, result)
+        self._merge_ipo_subscriptions(ipo_subscriptions, result)
 
         if not result.rows:
             result.warnings.append("No transaction rows found in the Transaction History section.")
         return result
 
-    def _parse_page(self, text: str, result: ExtractionResult, ipo_amounts: dict, ipo_qtys: dict) -> None:
+    def _parse_page(self, text: str, result: ExtractionResult, ipo_amounts: dict, ipo_qtys: dict, ipo_subscriptions: dict) -> None:
         lines = text.splitlines()
         i = 0
         while i < len(lines):
@@ -161,6 +193,10 @@ class ICSecuritiesParser(BrokerParser):
             trade_match = TRADE_RE.search(description)
             ipo_purchase_match = None if trade_match else IPO_PURCHASE_RE.search(description)
             ipo_allotment_match = None if (trade_match or ipo_purchase_match) else IPO_ALLOTMENT_RE.search(description)
+            ipo_subscription_match = (
+                None if (trade_match or ipo_purchase_match or ipo_allotment_match)
+                else IPO_SUBSCRIPTION_RE.match(description.strip())
+            )
 
             if trade_match:
                 result.rows.append(self._row_from_trade(trade_date, trade_match))
@@ -174,6 +210,8 @@ class ICSecuritiesParser(BrokerParser):
                 qty = self._parse_decimal(ipo_allotment_match.group("qty"))
                 if qty is not None:
                     ipo_qtys[key].append(qty)
+            elif ipo_subscription_match:
+                self._accumulate_ipo_subscription(trade_date, ipo_subscription_match, ipo_subscriptions)
             elif EQUITY_KEYWORDS_RE.search(description):
                 result.rows.append(self._row_from_unmatched_equity_line(trade_date, description))
             # else: ordinary cash-ledger line (funding, transfer, commission, contribution) — skip
@@ -225,6 +263,55 @@ class ICSecuritiesParser(BrokerParser):
                         f"a purchase amount line; verify the price and complete manually."
                     ),
                 ))
+
+    def _accumulate_ipo_subscription(self, trade_date, match, ipo_subscriptions: dict) -> None:
+        company = match.group("company").strip()
+        credit = self._parse_decimal(match.group("credit")) or Decimal("0")
+        debit = self._parse_decimal(match.group("debit")) or Decimal("0")
+        bucket = ipo_subscriptions[company.upper()]
+        bucket["company_name"] = company  # keep original casing for display
+        if match.group("action").lower() == "refund":
+            bucket["refunded"] += credit
+        else:
+            bucket["debited"] += debit
+        if bucket["last_date"] is None or (trade_date and trade_date > bucket["last_date"]):
+            bucket["last_date"] = trade_date
+
+    def _merge_ipo_subscriptions(self, ipo_subscriptions: dict, result: ExtractionResult) -> None:
+        """
+        Consolidates every "Debit/Refund for X IPO subscription" line for
+        the same company into ONE stub row instead of leaving a scattered
+        debit per installment plus a separate refund — the debits/refunds
+        aren't individually meaningful transactions (they're partial
+        applications toward a single allotment decided later), and the net
+        amount is the only real number available. Deliberately still a
+        stub (no matched instrument/quantity/price): the shares actually
+        allotted and the price per share are never stated anywhere in this
+        section — only the allotment/confirmation notice has that, and
+        guessing it from the net amount + an assumed offer price would be
+        exactly the kind of fabrication this app avoids everywhere else.
+        """
+        for key, bucket in ipo_subscriptions.items():
+            company = bucket.get("company_name", key)
+            net = bucket["debited"] - bucket["refunded"]
+            notes = f"IPO subscription for {company}: GHS {bucket['debited']} applied for"
+            if bucket["refunded"]:
+                notes += f", GHS {bucket['refunded']} refunded (a refund usually means fewer shares were allotted than applied for)"
+            notes += (
+                f", GHS {net} net invested. This statement doesn't state the shares allotted or the "
+                f"price per share — check your allotment/confirmation notice and enter it as a manual "
+                f"BUY transaction; use the net amount above to sanity-check the total cost."
+            )
+            result.rows.append(RawStatementRow(
+                raw_ticker_text=key,
+                transaction_type="",
+                quantity=None,
+                price_per_share=None,
+                fees=Decimal("0"),
+                trade_date=bucket["last_date"],
+                confidence="LOW",
+                parse_notes=notes,
+            ))
 
     def _row_from_trade(self, trade_date, match) -> RawStatementRow:
         side = "BUY" if match.group("side").lower() == "bought" else "SELL"
