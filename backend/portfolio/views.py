@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from corporate_actions.models import CorporateAction
 from instruments.models import Instrument
-from instruments.services import ticker_hue
+from instruments.services import market_breadth, market_sentiment, market_snapshot, ticker_hue
 
 from . import analytics, insights
 from .charts import svg_candle_chart, svg_donut_chart, svg_line_chart, svg_ring_gauge
@@ -104,6 +104,9 @@ def dashboard(request):
         if a["pct"]
     ]
 
+    market_moves = market_snapshot(limit=5)
+    sentiment = market_sentiment()
+
     context = {
         **summary,
         "has_any_transactions": has_any_transactions,
@@ -119,6 +122,21 @@ def dashboard(request):
         ).distinct().order_by("event_date")[:5],
         "health_score": health_score,
         "smart_insights": smart_insights,
+        "market_overview": {
+            "breadth": market_breadth(),
+            "sentiment": sentiment,
+            "gainers": market_moves["gainers"],
+            "losers": market_moves["losers"],
+            "as_of": market_moves["as_of"],
+            "instrument_count": market_moves["instrument_count"],
+        },
+        "sentiment_gauge_svg": svg_ring_gauge(
+            sentiment["score"],
+            size=72,
+            thickness=8,
+            color="#10b981" if sentiment["score"] >= 50 else "#f87171",
+            track_color="rgba(255,255,255,0.12)",
+        ) if sentiment else None,
     }
     return render(request, "portfolio/dashboard.html", context)
 

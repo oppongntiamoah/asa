@@ -137,3 +137,22 @@ def market_breadth():
         else:
             unchanged += 1
     return {"gainers": gainers, "losers": losers, "unchanged": unchanged, "as_of": latest_date}
+
+
+def market_sentiment():
+    """A 0-100 advance/decline score derived from today's real market
+    breadth (share of movers that gained, ignoring unchanged names) — not
+    an invented indicator, just breadth presented as a gauge. Returns None
+    when there isn't at least one mover to compute a ratio from."""
+    breadth = market_breadth()
+    total = breadth["gainers"] + breadth["losers"]
+    if total == 0:
+        return None
+    score = round(breadth["gainers"] / total * 100)
+    if score >= 65:
+        label = "Bullish"
+    elif score >= 35:
+        label = "Neutral"
+    else:
+        label = "Bearish"
+    return {"score": score, "label": label, "as_of": breadth["as_of"]}
