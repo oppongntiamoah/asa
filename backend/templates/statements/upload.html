@@ -1,29 +1,102 @@
 {% extends "base.html" %}
 {% block title %}Upload statement — SikaTrack{% endblock %}
 {% block content %}
-<h1 class="text-xl font-bold mb-1">Upload a broker statement</h1>
-<p class="text-sm text-gray-500 mb-6">We'll read your PDF and let you confirm every transaction before anything is added to your portfolio.</p>
+<div class="max-w-lg mx-auto">
+    <h1 class="text-xl font-bold mb-1">Upload a broker statement</h1>
+    <p class="text-sm text-gray-500 mb-6">We'll read your PDF and let you confirm every transaction before anything is added to your portfolio.</p>
 
-{% if billing_enabled %}
-<p class="text-xs {% if credits_remaining > 0 %}text-gray-500{% else %}text-red-600{% endif %} mb-4">
-    {{ credits_remaining }} PDF processing credit{{ credits_remaining|pluralize }} remaining.
-    <a href="{% url 'billing:pricing' %}" class="text-emerald-700">Buy more →</a>
-</p>
-{% endif %}
+    {% if billing_enabled %}
+    <p class="text-xs {% if credits_remaining > 0 %}text-gray-500{% else %}text-red-600{% endif %} mb-4">
+        {{ credits_remaining }} PDF processing credit{{ credits_remaining|pluralize }} remaining.
+        <a href="{% url 'billing:pricing' %}" class="text-emerald-700">Buy more →</a>
+    </p>
+    {% endif %}
 
-<form method="post" enctype="multipart/form-data" class="space-y-4 max-w-md">
-    {% csrf_token %}
-    {% for field in form %}
+    <form method="post" enctype="multipart/form-data" id="upload-form">
+        {% csrf_token %}
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
-            {{ field }}
-            {% for error in field.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
+            <label class="block text-sm font-medium text-gray-700 mb-1">Broker</label>
+            {{ form.broker }}
+            {% for error in form.broker.errors %}<p class="text-xs text-red-600 mt-1">{{ error }}</p>{% endfor %}
         </div>
-    {% endfor %}
-    <p class="text-xs text-gray-400">IC Securities and Black Star Advisors are supported today — other brokers are coming soon.
-        You can always <a href="{% url 'portfolio:transaction_add' %}" class="text-emerald-700">add transactions manually</a> in the meantime.</p>
-    <button type="submit" class="w-full bg-emerald-600 text-white rounded-lg py-2 font-medium hover:bg-emerald-700">
-        Upload
-    </button>
-</form>
+
+        <div
+            id="dropzone"
+            class="mt-4 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/40 transition-colors"
+        >
+            <div class="text-3xl mb-2">📄</div>
+            <p class="text-sm font-medium" id="dropzone-text">Drag & drop your statement here</p>
+            <p class="text-xs text-gray-400 mt-1">or click to browse your files</p>
+            <p class="text-[11px] text-gray-400 mt-3">PDF only, up to 20 MB</p>
+        </div>
+        {{ form.file }}
+        {% for error in form.file.errors %}<p class="text-xs text-red-600 mt-2">{{ error }}</p>{% endfor %}
+
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mt-6 mb-2">Recognized automatically</p>
+        <div class="flex flex-wrap gap-2 mb-6">
+            {% for value, label in form.broker.field.choices %}
+                {% if value %}<span class="text-xs font-medium px-3 py-1.5 rounded-full bg-gray-100 text-gray-600">{{ label }}</span>{% endif %}
+            {% endfor %}
+        </div>
+        <p class="text-xs text-gray-400 mb-6">
+            Other brokers are coming soon — you can always <a href="{% url 'portfolio:transaction_add' %}" class="text-emerald-700">add transactions manually</a> in the meantime.
+        </p>
+
+        <button type="submit" id="upload-submit" class="w-full bg-emerald-600 text-white rounded-lg py-2.5 font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            Choose a file to upload
+        </button>
+    </form>
+</div>
+
+<script>
+    (function () {
+        var dropzone = document.getElementById("dropzone");
+        var fileInput = document.getElementById("{{ form.file.id_for_label }}");
+        var dropzoneText = document.getElementById("dropzone-text");
+        var submitBtn = document.getElementById("upload-submit");
+        if (!dropzone || !fileInput) return;
+
+        fileInput.style.display = "none";
+
+        function updateLabel() {
+            var file = fileInput.files && fileInput.files[0];
+            if (file) {
+                dropzoneText.textContent = file.name;
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Upload";
+            } else {
+                dropzoneText.textContent = "Drag & drop your statement here";
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Choose a file to upload";
+            }
+        }
+
+        dropzone.addEventListener("click", function () { fileInput.click(); });
+        fileInput.addEventListener("change", updateLabel);
+
+        ["dragenter", "dragover"].forEach(function (evt) {
+            dropzone.addEventListener(evt, function (e) {
+                e.preventDefault();
+                dropzone.classList.add("border-emerald-500", "bg-emerald-50");
+            });
+        });
+        ["dragleave", "drop"].forEach(function (evt) {
+            dropzone.addEventListener(evt, function (e) {
+                e.preventDefault();
+                dropzone.classList.remove("border-emerald-500", "bg-emerald-50");
+            });
+        });
+        dropzone.addEventListener("drop", function (e) {
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                updateLabel();
+            }
+        });
+
+        document.getElementById("upload-form").addEventListener("submit", function () {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Uploading…";
+        });
+    })();
+</script>
 {% endblock %}
