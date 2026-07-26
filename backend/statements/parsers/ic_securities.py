@@ -11,6 +11,17 @@ e.g.:
     29/12/2025 Bought 16 MTNGH at 4.20 for a consideration of 67.20 and
     total charges of 1.68                                    0.00  -68.88
 
+Note the wrap: the "...and total charges of X" clause lands on the next
+physical PDF line, not the dated line itself — confirmed by generating a
+real PDF with the description split across two drawString calls and
+running it through pdfplumber (a hand-typed single-line test string had
+been hiding this). Since the continuation line doesn't start with a date,
+_parse_page() would otherwise skip it as unrecognized boilerplate and the
+TRADE_RE match against the dated line alone would fail, silently dropping
+a real trade. BOUGHT_SOLD_START_RE detects this specific case (a
+Bought/Sold line that doesn't fully match TRADE_RE) and pulls in the next
+line before giving up on it.
+
 Everything else on the statement — "Funding for Purchase of shares",
 "Transfer/Payout to client payment account", commission lines, MoMo/bank
 contributions, withdrawals — is cash-ledger noise with no bearing on
@@ -58,6 +69,12 @@ TRADE_RE = re.compile(
     r"\s+and total charges of\s+(?P<fees>[\d,.]+)",
     re.IGNORECASE,
 )
+
+# Matches just the start of a trade sentence, used to detect a Bought/Sold
+# line whose "...and total charges of X" clause got wrapped onto the next
+# physical PDF line (real statements do this — see module docstring) so
+# the continuation can be pulled in instead of the row silently vanishing.
+BOUGHT_SOLD_START_RE = re.compile(r"^\s*(Bought|Sold)\b", re.IGNORECASE)
 
 # The two IPO-allocation line shapes — see module docstring. Each only
 # carries half of what's needed for a real transaction; _merge_ipo_fragments
@@ -118,38 +135,50 @@ class ICSecuritiesParser(BrokerParser):
         return result
 
     def _parse_page(self, text: str, result: ExtractionResult, ipo_amounts: dict, ipo_qtys: dict) -> None:
-        for raw_line in text.splitlines():
-            line_match = LINE_RE.match(raw_line.strip())
+        lines = text.splitlines()
+        i = 0
+        while i < len(lines):
+            line_match = LINE_RE.match(lines[i].strip())
             if not line_match:
+                i += 1
                 continue  # headers, footers, disclaimers, running totals — none start with a date
 
             trade_date = self._parse_date(line_match.group("date"))
             description = line_match.group("rest")
 
+            # A long "Bought/Sold ... for a consideration of ... and total
+            # charges of ..." sentence can wrap onto the next physical PDF
+            # line (verified against a real sample — see module docstring).
+            # The wrapped continuation never starts with its own date, so
+            # pull it in before giving up on this being a trade line —
+            # otherwise a real trade silently vanishes instead of landing
+            # on the review screen.
+            if BOUGHT_SOLD_START_RE.match(description) and not TRADE_RE.search(description):
+                if i + 1 < len(lines) and not LINE_RE.match(lines[i + 1].strip()):
+                    description = description + " " + lines[i + 1].strip()
+                    i += 1
+
             trade_match = TRADE_RE.search(description)
+            ipo_purchase_match = None if trade_match else IPO_PURCHASE_RE.search(description)
+            ipo_allotment_match = None if (trade_match or ipo_purchase_match) else IPO_ALLOTMENT_RE.search(description)
+
             if trade_match:
                 result.rows.append(self._row_from_trade(trade_date, trade_match))
-                continue
-
-            ipo_purchase_match = IPO_PURCHASE_RE.search(description)
-            if ipo_purchase_match:
+            elif ipo_purchase_match:
                 key = (trade_date, ipo_purchase_match.group("ticker").upper())
                 amount = self._parse_decimal(ipo_purchase_match.group("amount"))
                 if amount is not None:
                     ipo_amounts[key].append(amount)
-                continue
-
-            ipo_allotment_match = IPO_ALLOTMENT_RE.search(description)
-            if ipo_allotment_match:
+            elif ipo_allotment_match:
                 key = (trade_date, ipo_allotment_match.group("ticker").upper())
                 qty = self._parse_decimal(ipo_allotment_match.group("qty"))
                 if qty is not None:
                     ipo_qtys[key].append(qty)
-                continue
-
-            if EQUITY_KEYWORDS_RE.search(description):
+            elif EQUITY_KEYWORDS_RE.search(description):
                 result.rows.append(self._row_from_unmatched_equity_line(trade_date, description))
             # else: ordinary cash-ledger line (funding, transfer, commission, contribution) — skip
+
+            i += 1
 
     def _merge_ipo_fragments(self, ipo_amounts: dict, ipo_qtys: dict, result: ExtractionResult) -> None:
         for key in set(ipo_amounts) | set(ipo_qtys):
