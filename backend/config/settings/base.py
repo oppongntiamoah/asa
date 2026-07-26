@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_q",
     "import_export",
+    "django_ckeditor_5",
     "accounts",
     "instruments",
     "portfolio",
@@ -32,12 +33,14 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "accounts.middleware.UpdateSessionActivityMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -53,6 +56,8 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "portfolio.context.portfolio_context",
+                "news.context_processors.site_settings",
+                "news.context_processors.news_notification",
             ],
         },
     },
@@ -89,8 +94,29 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# prod.py swaps "staticfiles" to whitenoise's compressed+hashed storage —
+# dev keeps Django's plain default so runserver works without collectstatic.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+CKEDITOR_5_FILE_UPLOAD_PERMISSION = "staff"  # only admin/staff can upload images into article bodies
+CKEDITOR_5_CONFIGS = {
+    "default": {
+        "toolbar": [
+            "heading", "|", "bold", "italic", "underline", "|",
+            "bulletedList", "numberedList", "blockQuote", "|",
+            "link", "insertImage", "insertTable", "|",
+            "undo", "redo", "sourceEditing",
+        ],
+        "image": {"toolbar": ["imageTextAlternative", "|", "imageStyle:alignLeft", "imageStyle:alignRight", "imageStyle:alignCenter"]},
+        "table": {"contentToolbar": ["tableColumn", "tableRow", "mergeTableCells"]},
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

@@ -4,6 +4,9 @@ from .base import *  # noqa: F401,F403
 
 DEBUG = False
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="", cast=Csv())
+CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="", cast=Csv())
+
+STORAGES["staticfiles"]["BACKEND"] = "whitenoise.storage.CompressedManifestStaticFilesStorage"  # noqa: F405
 
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True

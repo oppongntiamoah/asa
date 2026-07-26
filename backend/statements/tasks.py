@@ -11,6 +11,13 @@ def parse_statement(statement_id: int):
     """
     Enqueued via Django-Q2 right after upload so the request/response cycle
     isn't blocked on PDF extraction. See PRODUCT_DESIGN.md §4.1.
+
+    The uploaded file itself is deleted from storage as soon as it's been
+    read — a broker statement carries account numbers, addresses, and a
+    full transaction history, and nothing downstream (review, confirm,
+    edit, delete) ever needs the original PDF again once its data has been
+    extracted into ExtractedTransaction rows. Only the extracted data is
+    kept.
     """
     statement = StatementUpload.objects.get(pk=statement_id)
     statement.status = StatementUpload.PARSING
@@ -28,10 +35,12 @@ def parse_statement(statement_id: int):
             "image, or not match the expected IC Securities layout. Manual entry is "
             "always available from Add Transaction."
         )
-        statement.save(update_fields=["status", "parse_error"])
+        statement.file.delete(save=False)
+        statement.save(update_fields=["status", "parse_error", "file"])
         return
 
     extracted_rows = rows_to_extracted_transactions(statement, result.rows)
     ExtractedTransaction.objects.bulk_create(extracted_rows)
     statement.status = StatementUpload.NEEDS_REVIEW
-    statement.save(update_fields=["status"])
+    statement.file.delete(save=False)
+    statement.save(update_fields=["status", "file"])

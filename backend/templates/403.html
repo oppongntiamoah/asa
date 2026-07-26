@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Access denied — SikaTrack{% endblock %}
+{% block content %}
+<div class="max-w-sm mx-auto mt-16 text-center">
+    <div class="text-4xl mb-4">🚫</div>
+    <h1 class="text-xl font-bold mb-2">Access denied</h1>
+    <p class="text-sm text-gray-500 mb-6">
+        {% if exception %}{{ exception }}{% else %}You don't have permission to view this, or you've hit a rate limit — try again shortly.{% endif %}
+    </p>
+    <a href="{% url 'portfolio:dashboard' %}" class="inline-block bg-emerald-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-emerald-700">Go to dashboard</a>
+</div>
+{% endblock %}

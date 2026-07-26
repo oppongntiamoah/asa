@@ -28,8 +28,15 @@ urlpatterns = [
     path("calendar/", include("corporate_actions.urls")),
     path("market/", include("instruments.urls")),
     path("news/", include("news.urls")),
+    path("ckeditor5/", include("django_ckeditor_5.urls")),
     path("", include("portfolio.urls")),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Not the most efficient way to serve uploaded media at scale, but for a
+# single-server deployment without a separate object store/CDN configured,
+# this is what actually makes uploaded images (news, instrument logos,
+# OG images) reachable at all in production — the DEBUG-only static()
+# helper Django ships with would otherwise leave /media/ completely
+# unserved once DEBUG=False. Swap for S3/CDN-backed storage if traffic
+# ever justifies it.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

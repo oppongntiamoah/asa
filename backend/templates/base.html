@@ -4,7 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}SikaTrack{% endblock %}</title>
+    <title>{% block title %}{{ site_settings.default_meta_title|default:"SikaTrack" }}{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}{{ site_settings.default_meta_description }}{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{{ site_settings.default_meta_title|default:'SikaTrack' }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ site_settings.default_meta_description }}{% endblock %}">
+    {% if site_settings.og_image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ site_settings.og_image.url }}">{% endif %}
+    {% if site_settings.google_analytics_id %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ site_settings.google_analytics_id }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag("js", new Date());
+        gtag("config", "{{ site_settings.google_analytics_id }}");
+    </script>
+    {% endif %}
+    {% if site_settings.adsense_client_id %}
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ site_settings.adsense_client_id }}" crossorigin="anonymous"></script>
+    {% endif %}
     {# Tailwind Play CDN for MVP speed — swap for a compiled build (tailwindcss-cli) before production so pages aren't shipping the JIT compiler to every visitor. #}
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
@@ -75,6 +91,25 @@
         }
         .privacy-mode .privacy-blur-chart svg,
         .privacy-mode .privacy-blur-chart canvas { filter: blur(8px); }
+
+        /* Styling for CKEditor-authored news article bodies — Play CDN
+           doesn't bundle the Tailwind typography plugin, so this covers
+           the specific tags CKEditor's toolbar actually produces. */
+        .prose-news h2 { font-size: 1.25rem; font-weight: 700; margin: 1.5rem 0 0.5rem; }
+        .prose-news h3 { font-size: 1.1rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
+        .prose-news p { margin: 0 0 1rem; }
+        .prose-news ul { list-style: disc; padding-left: 1.5rem; margin: 0 0 1rem; }
+        .prose-news ol { list-style: decimal; padding-left: 1.5rem; margin: 0 0 1rem; }
+        .prose-news li { margin: 0.25rem 0; }
+        .prose-news a { color: #047857; text-decoration: underline; }
+        .prose-news blockquote { border-left: 3px solid #d1d5db; padding-left: 1rem; color: #6b7280; margin: 0 0 1rem; }
+        .prose-news strong { font-weight: 700; }
+        .prose-news table { border-collapse: collapse; margin: 0 0 1rem; }
+        .prose-news table td, .prose-news table th { border: 1px solid #e5e7eb; padding: 0.4rem 0.6rem; }
+        .prose-news img { max-width: 100%; border-radius: 0.5rem; margin: 0.5rem 0; }
+        .dark .prose-news a { color: #34d399; }
+        .dark .prose-news blockquote { border-color: #3a3a3a; color: #9a9a9a; }
+        .dark .prose-news table td, .dark .prose-news table th { border-color: #2b2b2b; }
     </style>
 </head>
 <body
@@ -117,20 +152,31 @@
                 portfolioMenuOpen: false
             }"
         >
-            <div class="px-5 py-5 flex items-center gap-2 border-b border-neutral-800">
-                <span class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold">S</span>
-                <span class="font-bold text-white">SikaTrack</span>
+            <div class="px-5 py-5 flex items-center gap-2 border-b border-neutral-800/80">
+                <span class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold shadow-lg shadow-emerald-900/40">S</span>
+                <span class="font-bold text-white tracking-tight">SikaTrack</span>
+            </div>
+
+            <div class="px-3 pt-3">
+                <div class="relative">
+                    {% icon "search" "w-4 h-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" %}
+                    <input
+                        type="text" id="sidebar-search" placeholder="Quick jump…" autocomplete="off"
+                        class="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9 pr-9 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600"
+                    >
+                    <kbd class="hidden sidebar-search-hint absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-neutral-500 border border-neutral-700 rounded px-1.5 py-0.5">/</kbd>
+                </div>
             </div>
 
             <div class="px-3 pt-3 relative">
-                <button @click="portfolioMenuOpen = !portfolioMenuOpen" class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-sm text-white">
+                <button @click="portfolioMenuOpen = !portfolioMenuOpen" class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 transition-colors text-sm text-white">
                     <span class="flex items-center gap-2 min-w-0">
                         {% icon "holdings" "w-4 h-4 text-neutral-400" %}
                         <span class="truncate">{{ active_portfolio.name }}</span>
                     </span>
                     <span class="transition-transform shrink-0" :class="portfolioMenuOpen ? 'rotate-180' : ''">{% icon "chevron-down" "w-4 h-4 text-neutral-500" %}</span>
                 </button>
-                <div x-show="portfolioMenuOpen" x-cloak @click.outside="portfolioMenuOpen = false" class="absolute left-3 right-3 mt-1 bg-neutral-900 border border-neutral-800 rounded-lg shadow-lg z-10 py-1" style="display: none">
+                <div x-show="portfolioMenuOpen" x-cloak @click.outside="portfolioMenuOpen = false" class="absolute left-3 right-3 mt-1 bg-neutral-900 border border-neutral-800 rounded-xl shadow-xl z-10 py-1" style="display: none">
                     {% for p in user_portfolios %}
                         {% if p.id == active_portfolio.id %}
                         <div class="px-3 py-2 text-sm text-white flex items-center justify-between">
@@ -151,58 +197,118 @@
             </div>
 
             <div class="px-3 pt-3">
-                <a href="{% url 'portfolio:transaction_add' %}" class="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium">
+                <a href="{% url 'portfolio:transaction_add' %}" class="flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 transition-colors text-white text-sm font-medium shadow-lg shadow-emerald-900/30">
                     {% icon "plus" "w-4 h-4" %} Add transaction
                 </a>
             </div>
 
-            <nav class="flex-1 overflow-y-auto px-3 py-4 text-sm">
-                <a href="{{ dashboard_url }}" class="flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 {% if request.path == dashboard_url %}bg-neutral-900 text-white{% else %}hover:bg-neutral-900 hover:text-white{% endif %}">
+            <nav id="sidebar-nav" class="flex-1 overflow-y-auto px-3 py-4 text-sm">
+                <a data-nav-label="Dashboard" href="{{ dashboard_url }}" class="flex items-center gap-3 px-3 py-2 rounded-xl mb-0.5 transition-colors {% if request.path == dashboard_url %}bg-emerald-600 text-white shadow-md shadow-emerald-900/30{% else %}text-neutral-300 hover:bg-neutral-900 hover:text-white{% endif %}">
                     {% icon "home" %} Dashboard
                 </a>
 
                 <p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-600">Holdings</p>
-                <button @click="open.portfolio = !open.portfolio" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg mb-0.5 hover:bg-neutral-900 hover:text-white {% if is_portfolio %}text-white{% endif %}">
+                <button @click="open.portfolio = !open.portfolio" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl mb-0.5 transition-colors hover:bg-neutral-900 hover:text-white {% if is_portfolio %}text-white{% else %}text-neutral-300{% endif %}">
                     <span class="flex items-center gap-3">{% icon "holdings" %} Holdings & Activity</span>
                     <span class="transition-transform" :class="open.portfolio ? 'rotate-180' : ''">{% icon "chevron-down" "w-4 h-4 text-neutral-500" %}</span>
                 </button>
                 <div x-show="open.portfolio" x-cloak class="pl-3 space-y-0.5 mb-1">
-                    <a href="{% url 'portfolio:holdings' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'holdings' or url_name == 'holding_detail' or url_name == 'stock_breakdown' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Holdings</a>
-                    <a href="{% url 'portfolio:transaction_list' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'transaction_list' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Transactions</a>
-                    <a href="{% url 'statements:list' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'statements' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Statements</a>
-                    <a href="{% url 'watchlist:watchlist' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'watchlist' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Watchlist</a>
-                    <a href="{% url 'dividends:history' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'dividends' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Dividends</a>
+                    <a data-nav-label="Holdings" href="{% url 'portfolio:holdings' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if url_name == 'holdings' or url_name == 'holding_detail' or url_name == 'stock_breakdown' %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Holdings</a>
+                    <a data-nav-label="Transactions" href="{% url 'portfolio:transaction_list' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if url_name == 'transaction_list' %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Transactions</a>
+                    <a data-nav-label="Statements" href="{% url 'statements:list' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if 'statements' in ns %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Statements</a>
+                    <a data-nav-label="Watchlist" href="{% url 'watchlist:watchlist' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if 'watchlist' in ns %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Watchlist</a>
+                    <a data-nav-label="Dividends" href="{% url 'dividends:history' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if 'dividends' in ns %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Dividends</a>
                 </div>
 
                 <p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-600">Insights</p>
-                <button @click="open.analysis = !open.analysis" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg mb-0.5 hover:bg-neutral-900 hover:text-white {% if is_analysis %}text-white{% endif %}">
+                <button @click="open.analysis = !open.analysis" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl mb-0.5 transition-colors hover:bg-neutral-900 hover:text-white {% if is_analysis %}text-white{% else %}text-neutral-300{% endif %}">
                     <span class="flex items-center gap-3">{% icon "analysis" %} Analysis</span>
                     <span class="transition-transform" :class="open.analysis ? 'rotate-180' : ''">{% icon "chevron-down" "w-4 h-4 text-neutral-500" %}</span>
                 </button>
                 <div x-show="open.analysis" x-cloak class="pl-3 space-y-0.5 mb-1">
-                    <a href="{% url 'portfolio:performance' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'performance' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Performance</a>
-                    <a href="{% url 'portfolio:cost_basis' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'cost_basis' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Cost Basis</a>
-                    <a href="{% url 'portfolio:sector_analysis' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'sector_analysis' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Sector Analysis</a>
-                    <a href="{% url 'portfolio:risk_health' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'risk_health' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Risk & Health</a>
-                    <a href="{% url 'portfolio:insights' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'insights' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Insights</a>
-                    <a href="{% url 'portfolio:cash_flow' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'cash_flow' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Cash Flow</a>
-                    <a href="{% url 'portfolio:tax_summary' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'tax_summary' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Tax Summary</a>
-                    <a href="{% url 'portfolio:timeline' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'timeline' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Timeline</a>
-                    <a href="{% url 'portfolio:transaction_analysis' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'transaction_analysis' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Transaction Analysis</a>
+                    <a data-nav-label="Performance" href="{% url 'portfolio:performance' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if url_name == 'performance' %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Performance</a>
+                    <a data-nav-label="Cost Basis" href="{% url 'portfolio:cost_basis' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if url_name == 'cost_basis' %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Cost Basis</a>
+                    <a data-nav-label="Sector Analysis" href="{% url 'portfolio:sector_analysis' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if url_name == 'sector_analysis' %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Sector Analysis</a>
+                    <a data-nav-label="Risk & Health" href="{% url 'portfolio:risk_health' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if url_name == 'risk_health' %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Risk & Health</a>
+                    <a data-nav-label="Insights" href="{% url 'portfolio:insights' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if url_name == 'insights' %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Insights</a>
+                    <a data-nav-label="Cash Flow" href="{% url 'portfolio:cash_flow' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if url_name == 'cash_flow' %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Cash Flow</a>
+                    <a data-nav-label="Tax Summary" href="{% url 'portfolio:tax_summary' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if url_name == 'tax_summary' %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Tax Summary</a>
+                    <a data-nav-label="Timeline" href="{% url 'portfolio:timeline' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if url_name == 'timeline' %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Timeline</a>
+                    <a data-nav-label="Transaction Analysis" href="{% url 'portfolio:transaction_analysis' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if url_name == 'transaction_analysis' %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Transaction Analysis</a>
                 </div>
 
                 <p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-600">Market</p>
-                <button @click="open.market = !open.market" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg mb-0.5 hover:bg-neutral-900 hover:text-white {% if is_market %}text-white{% endif %}">
+                <button @click="open.market = !open.market" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-xl mb-0.5 transition-colors hover:bg-neutral-900 hover:text-white {% if is_market %}text-white{% else %}text-neutral-300{% endif %}">
                     <span class="flex items-center gap-3">{% icon "market" %} Market</span>
                     <span class="transition-transform" :class="open.market ? 'rotate-180' : ''">{% icon "chevron-down" "w-4 h-4 text-neutral-500" %}</span>
                 </button>
                 <div x-show="open.market" x-cloak class="pl-3 space-y-0.5 mb-1">
-                    <a href="{% url 'instruments:market' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'market' or url_name == 'detail' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Prices</a>
-                    <a href="{% url 'instruments:movers' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if url_name == 'movers' %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Movers</a>
-                    <a href="{% url 'corporate_actions:calendar' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'corporate_actions' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Calendar</a>
-                    <a href="{% url 'news:list' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg {% if 'news' in ns %}bg-neutral-900 text-white{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">News</a>
+                    <a data-nav-label="Prices" href="{% url 'instruments:market' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if url_name == 'market' or url_name == 'detail' %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Prices</a>
+                    <a data-nav-label="Movers" href="{% url 'instruments:movers' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if url_name == 'movers' %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Movers</a>
+                    <a data-nav-label="Calendar" href="{% url 'corporate_actions:calendar' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if 'corporate_actions' in ns %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">Calendar</a>
+                    <a data-nav-label="News" href="{% url 'news:list' %}" class="flex items-center gap-3 pl-6 pr-3 py-1.5 rounded-lg transition-colors {% if 'news' in ns %}bg-emerald-600/15 text-emerald-400{% else %}text-neutral-400 hover:text-white hover:bg-neutral-900{% endif %}">News</a>
                 </div>
             </nav>
+
+            <script>
+                (function () {
+                    var input = document.getElementById("sidebar-search");
+                    var nav = document.getElementById("sidebar-nav");
+                    if (!input || !nav) return;
+                    var aside = nav.closest("[x-data]");
+                    var links = Array.prototype.slice.call(nav.querySelectorAll("[data-nav-label]"));
+                    var groups = Array.prototype.slice.call(nav.querySelectorAll(":scope > p"));
+
+                    if (window.matchMedia && window.matchMedia("(pointer: fine)").matches) {
+                        var hint = document.querySelector(".sidebar-search-hint");
+                        if (hint) hint.classList.remove("hidden");
+                    }
+
+                    document.addEventListener("keydown", function (e) {
+                        if (e.key === "/" && document.activeElement !== input && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+                            e.preventDefault();
+                            input.focus();
+                        }
+                    });
+
+                    var subGroups = Array.prototype.slice.call(nav.querySelectorAll(":scope > div"));
+
+                    input.addEventListener("input", function () {
+                        var q = input.value.trim().toLowerCase();
+                        links.forEach(function (link) {
+                            var match = !q || link.dataset.navLabel.toLowerCase().indexOf(q) !== -1;
+                            link.style.display = match ? "" : "none";
+                        });
+                        // Section labels ("Holdings", "Insights"...) only make sense
+                        // when browsing, not filtering a flat search result list.
+                        groups.forEach(function (g) { g.style.display = q ? "none" : ""; });
+                        // Sub-nav groups are collapsed via Alpine's x-show; while
+                        // searching, force them open so matches inside a collapsed
+                        // section are reachable. Alpine's x-show only re-asserts
+                        // display:none when the underlying open.* value actually
+                        // changes, so just removing our override on clear isn't
+                        // enough — a group we forced open would stay visibly open
+                        // forever even though its own toggle state is still false.
+                        // Read the real state back from Alpine instead.
+                        var groupKeys = ["portfolio", "analysis", "market"];
+                        subGroups.forEach(function (group, i) {
+                            if (q) {
+                                group.style.display = "";
+                                return;
+                            }
+                            var openState = window.Alpine ? window.Alpine.$data(aside).open : null;
+                            var isOpen = openState ? openState[groupKeys[i]] : true;
+                            group.style.display = isOpen ? "" : "none";
+                        });
+                    });
+
+                    input.addEventListener("keydown", function (e) {
+                        if (e.key !== "Enter") return;
+                        var visible = links.find(function (l) { return l.style.display !== "none"; });
+                        if (visible) window.location.href = visible.getAttribute("href");
+                    });
+                })();
+            </script>
 
             <div class="p-3 border-t border-neutral-800">
                 <div class="flex items-center gap-3 px-2 py-2 mb-1">
@@ -240,9 +346,12 @@
                     </span>
                     <span class="text-xs text-neutral-500" x-text="$store.ui.privacy ? 'On' : 'Off'">Off</span>
                 </button>
-                <a href="{% url 'accounts:logout' %}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-400 hover:bg-neutral-900 hover:text-white">
-                    {% icon "logout" "w-5 h-5" %} Log out
-                </a>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-400 hover:bg-neutral-900 hover:text-white">
+                        {% icon "logout" "w-5 h-5" %} Log out
+                    </button>
+                </form>
             </div>
         </aside>
         {% endwith %}
@@ -390,12 +499,35 @@
                         <span class="flex items-center gap-3">{% icon "eye" "w-4 h-4" %}Hide amounts</span>
                         <span class="text-xs text-gray-400" x-text="$store.ui.privacy ? 'On' : 'Off'">Off</span>
                     </button>
-                    <a href="{% url 'accounts:logout' %}" class="flex items-center gap-3 py-2 text-sm text-red-600">{% icon "logout" "w-4 h-4" %}Log out</a>
+                    <form method="post" action="{% url 'accounts:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full flex items-center gap-3 py-2 text-sm text-red-600">{% icon "logout" "w-4 h-4" %}Log out</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
     {% endwith %}
+    {% endif %}
+
+    {% if unseen_news_article %}
+    <div
+        x-data="{ show: true }" x-show="show" x-cloak x-transition
+        class="fixed bottom-4 right-4 z-40 max-w-sm bg-white border border-gray-200 rounded-xl shadow-lg p-4"
+    >
+        <p class="text-sm font-semibold mb-1">📰 New: {{ unseen_news_article.title }}</p>
+        <p class="text-xs text-gray-500 mb-3">{{ unseen_news_article.display_summary|truncatechars:100 }}</p>
+        <div class="flex gap-2">
+            <a href="{% url 'news:detail' unseen_news_article.slug %}" class="text-xs bg-emerald-600 text-white rounded-lg px-3 py-1.5 font-medium">Read</a>
+            <button
+                type="button"
+                @click="show = false; fetch('{% url 'news:mark_seen' %}', {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'}})"
+                class="text-xs text-gray-500 px-3 py-1.5"
+            >
+                Dismiss
+            </button>
+        </div>
+    </div>
     {% endif %}
 </body>
 </html>
