@@ -1,0 +1,12 @@
+{% if site_settings.adsense_client_id and site_settings.adsense_sidebar_slot_id %}
+<div class="bg-white border border-gray-200 rounded-xl p-3">
+    <p class="text-[10px] uppercase tracking-wide text-gray-400 mb-2">Advertisement</p>
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="{{ site_settings.adsense_client_id }}"
+         data-ad-slot="{{ site_settings.adsense_sidebar_slot_id }}"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+{% endif %}

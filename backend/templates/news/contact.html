@@ -3,13 +3,29 @@
 {% block content %}
 <h1 class="text-xl font-bold mb-6">Contact</h1>
 
+{% if not site_settings.support_email and not site_settings.support_phone and not site_settings.office_address %}
 <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800 max-w-2xl">
-    Placeholder contact details below — replace with real ones before launch.
+    No contact details set yet — add them in Django admin under Site settings and they'll show here.
 </div>
+{% endif %}
 
 <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-2 max-w-2xl">
     <p class="text-sm font-semibold mb-2">Get in touch</p>
-    <p class="text-sm text-gray-600">Email: <span class="text-gray-400">support@sikatrack.example</span></p>
-    <p class="text-sm text-gray-600">Telegram: <span class="text-gray-400">@sikatrack_support</span></p>
+    {% if site_settings.support_email %}
+    <p class="text-sm text-gray-600">Email: <a href="mailto:{{ site_settings.support_email }}" class="text-emerald-700 hover:underline">{{ site_settings.support_email }}</a></p>
+    {% endif %}
+    {% if site_settings.support_phone %}
+    <p class="text-sm text-gray-600">Phone: <a href="tel:{{ site_settings.support_phone }}" class="text-emerald-700 hover:underline">{{ site_settings.support_phone }}</a></p>
+    {% endif %}
+    {% if site_settings.office_address %}
+    <p class="text-sm text-gray-600">Address: <span class="text-gray-500">{{ site_settings.office_address }}</span></p>
+    {% endif %}
+    {% if site_settings.twitter_url or site_settings.linkedin_url or site_settings.facebook_url %}
+    <div class="flex gap-4 pt-2">
+        {% if site_settings.twitter_url %}<a href="{{ site_settings.twitter_url }}" target="_blank" rel="noopener noreferrer" class="text-sm text-emerald-700 hover:underline">X / Twitter</a>{% endif %}
+        {% if site_settings.linkedin_url %}<a href="{{ site_settings.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="text-sm text-emerald-700 hover:underline">LinkedIn</a>{% endif %}
+        {% if site_settings.facebook_url %}<a href="{{ site_settings.facebook_url }}" target="_blank" rel="noopener noreferrer" class="text-sm text-emerald-700 hover:underline">Facebook</a>{% endif %}
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

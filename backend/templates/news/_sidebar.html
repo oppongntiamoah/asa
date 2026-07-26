@@ -1,0 +1,14 @@
+{% if most_popular %}
+<div class="bg-white border border-gray-200 rounded-xl p-4 mb-4">
+    <p class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Most popular</p>
+    <div class="space-y-3">
+        {% for a in most_popular %}
+        <a href="{% url 'news:detail' a.slug %}" class="block group">
+            <p class="text-sm font-medium leading-snug group-hover:text-emerald-700">{{ a.title }}</p>
+            <p class="text-xs text-gray-400">{{ a.view_count }} view{{ a.view_count|pluralize }}</p>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% include "news/_adsense_sidebar.html" %}

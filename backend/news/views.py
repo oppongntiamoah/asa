@@ -1,6 +1,17 @@
+from django.contrib.auth.decorators import login_required
+from django.db.models import F
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from .models import NewsArticle
+
+
+def _mark_news_seen(request):
+    if request.user.is_authenticated:
+        request.user.last_seen_news_at = timezone.now()
+        request.user.save(update_fields=["last_seen_news_at"])
 
 
 def news_list(request):
@@ -13,7 +24,9 @@ def news_list(request):
         "articles": articles,
         "categories": NewsArticle.CATEGORY_CHOICES,
         "active_category": category,
+        "most_popular": NewsArticle.objects.filter(is_published=True).order_by("-view_count", "-published_at")[:5],
     }
+    _mark_news_seen(request)
     # HTMX category-filter clicks only need the pills+grid re-rendered
     # (so the active pill highlight updates too), not a full page
     # (including the sidebar/header) round-trip.
@@ -23,7 +36,21 @@ def news_list(request):
 
 def news_detail(request, slug):
     article = get_object_or_404(NewsArticle, slug=slug, is_published=True)
-    return render(request, "news/detail.html", {"article": article})
+    NewsArticle.objects.filter(pk=article.pk).update(view_count=F("view_count") + 1)
+    context = {
+        "article": article,
+        "related_articles": article.related_articles(),
+        "most_popular": NewsArticle.objects.filter(is_published=True).exclude(pk=article.pk).order_by("-view_count", "-published_at")[:5],
+    }
+    _mark_news_seen(request)
+    return render(request, "news/detail.html", context)
+
+
+@login_required
+@require_POST
+def mark_news_seen(request):
+    _mark_news_seen(request)
+    return HttpResponse(status=204)
 
 
 def faq(request):
