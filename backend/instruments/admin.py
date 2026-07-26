@@ -2,6 +2,7 @@ from django import forms
 from django.contrib import admin, messages
 from django.shortcuts import redirect, render
 from django.urls import path
+from django.utils.html import format_html
 from import_export.admin import ImportExportModelAdmin
 
 from .ingest.csv_ingest import ingest_price_csv
@@ -12,9 +13,15 @@ from .resources import InstrumentResource
 @admin.register(Instrument)
 class InstrumentAdmin(ImportExportModelAdmin):
     resource_classes = [InstrumentResource]
-    list_display = ("ticker", "name", "asset_class", "sector", "is_active", "listed_date")
+    list_display = ("logo_preview", "ticker", "name", "asset_class", "sector", "is_active", "listed_date")
     search_fields = ("ticker", "name")
     list_filter = ("asset_class", "sector", "is_active")
+
+    @admin.display(description="Logo")
+    def logo_preview(self, obj):
+        if obj.logo:
+            return format_html('<img src="{}" style="height:24px;width:24px;border-radius:50%;object-fit:cover">', obj.logo.url)
+        return "—"
 
 
 @admin.register(PriceBar)

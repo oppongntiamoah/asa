@@ -33,6 +33,12 @@ class Instrument(models.Model):
     isin = models.CharField(max_length=20, blank=True)
     is_active = models.BooleanField(default=True)  # False if delisted/suspended
     listed_date = models.DateField(null=True, blank=True)
+    logo = models.ImageField(
+        upload_to="instrument_logos/", blank=True, null=True,
+        help_text="Optional official logo. GSE doesn't publish these, so most instruments fall back to a "
+                   "generated initials badge (see instruments/templatetags/instrument_avatar.py) — only "
+                   "upload one you can confirm is the real, current company mark.",
+    )
 
     class Meta:
         ordering = ["ticker"]

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load instrument_avatar %}
 {% block title %}Watchlist — SikaTrack{% endblock %}
 {% block content %}
 <h1 class="text-xl font-bold mb-1">Watchlist</h1>
@@ -18,10 +19,13 @@
 <div class="space-y-3">
     {% for r in rows %}
     <div class="bg-white border border-gray-200 rounded-xl p-4 flex justify-between items-center">
-        <div>
-            <p class="font-semibold">{{ r.instrument.ticker }}</p>
-            <p class="text-xs text-gray-400">{{ r.instrument.name }}</p>
-            {% if r.high_52w %}<p class="text-xs text-gray-400">52wk: GHS {{ r.low_52w|floatformat:2 }} – {{ r.high_52w|floatformat:2 }}</p>{% endif %}
+        <div class="flex items-center gap-3">
+            {% instrument_avatar r.instrument "sm" %}
+            <div>
+                <p class="font-semibold">{{ r.instrument.ticker }}</p>
+                <p class="text-xs text-gray-400">{{ r.instrument.name }}</p>
+                {% if r.high_52w %}<p class="text-xs text-gray-400">52wk: GHS {{ r.low_52w|floatformat:2 }} – {{ r.high_52w|floatformat:2 }}</p>{% endif %}
+            </div>
         </div>
         <div class="text-right">
             {% if r.current_price is not None %}

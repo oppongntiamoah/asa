@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load instrument_avatar %}
 {% block title %}Portfolio Holdings — SikaTrack{% endblock %}
 {% block content %}
 <div class="flex justify-between items-center mb-1">
@@ -37,7 +38,12 @@
     <tbody>
         {% for r in rows %}
         <tr class="border-t border-gray-100">
-            <td class="py-3 font-semibold"><a href="{% url 'portfolio:holding_detail' r.instrument.id %}">{{ r.instrument.ticker }}</a></td>
+            <td class="py-3 font-semibold">
+                <a href="{% url 'portfolio:holding_detail' r.instrument.id %}" class="flex items-center gap-2">
+                    {% instrument_avatar r.instrument "xs" %}
+                    {{ r.instrument.ticker }}
+                </a>
+            </td>
             <td class="py-3 text-right"><span class="money-mask">{{ r.quantity }}</span></td>
             <td class="py-3 text-right text-gray-500"><span class="money-mask">GHS {{ r.avg_cost|floatformat:2 }}</span></td>
             <td class="py-3 text-right font-medium">{% if r.current_price is not None %}GHS {{ r.current_price|floatformat:2 }}{% else %}—{% endif %}</td>
