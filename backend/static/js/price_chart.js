@@ -19,7 +19,7 @@
 
     function chartColors() {
         return isDark()
-            ? { bg: "transparent", text: "#9a9a9a", grid: "#262626", border: "#3a3a3a" }
+            ? { bg: "transparent", text: "#868da3", grid: "#1c1f2a", border: "#333a4b" }
             : { bg: "transparent", text: "#6b7280", grid: "#f3f4f6", border: "#e5e7eb" };
     }
 
@@ -39,7 +39,7 @@
         container.style.position = "relative";
 
         var chart = LightweightCharts.createChart(container, {
-            layout: { background: { color: colors.bg }, textColor: colors.text },
+            layout: { background: { color: colors.bg }, textColor: colors.text, attributionLogo: false },
             grid: {
                 vertLines: { color: colors.grid },
                 horzLines: { color: colors.grid },

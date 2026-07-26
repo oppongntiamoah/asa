@@ -23,6 +23,14 @@
     {% endif %}
     {# Tailwind Play CDN for MVP speed — swap for a compiled build (tailwindcss-cli) before production so pages aren't shipping the JIT compiler to every visitor. #}
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Class-based (not media-query) dark mode, so the manual light/
+        // dark/system toggle below actually controls native `dark:` utility
+        // classes — without this, Play CDN defaults to following
+        // prefers-color-scheme only, and a handful of `dark:` classes
+        // already in a few templates were silently inert.
+        if (window.tailwind) { tailwind.config = { darkMode: "class" }; }
+    </script>
     <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
     <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
     {% block extra_head %}{% endblock %}
@@ -34,47 +42,91 @@
         // with privacy mode on. Kept in sync with the Alpine store below,
         // which handles the toggle buttons after the page has loaded.
         (function () {
-            var theme = localStorage.getItem("sikatrack-theme") || "system";
+            var theme = localStorage.getItem("sikatrack-theme") || "dark";
             var dark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
             document.documentElement.classList.toggle("dark", dark);
             document.documentElement.classList.toggle("privacy-mode", localStorage.getItem("sikatrack-privacy") === "1");
         })();
     </script>
     <style>
-        /* Dark theme — either "system" (follows prefers-color-scheme) or an
-           explicit manual choice, both funneled into the same `.dark` class
-           on <html> so there's one set of override rules regardless of which
-           picked it. Existing templates consistently use a small vocabulary
-           of Tailwind utilities (bg-white, border-gray-200, text-gray-500,
-           etc.), so this block remaps that vocabulary instead of hand-editing
-           every template — a pragmatic tradeoff of the Play-CDN setup; a
-           compiled Tailwind build with real `dark:` variants would be the
-           cleaner long-term version. */
-        .dark, .dark body { background-color: #0a0a0a; }
-        .dark body { color: #e5e5e5; }
-        .dark .bg-white { background-color: #141414 !important; }
-        .dark .bg-gray-50 { background-color: #0a0a0a !important; }
-        .dark .bg-gray-100 { background-color: #1f1f1f !important; }
-        .dark .border-gray-100 { border-color: #262626 !important; }
-        .dark .border-gray-200 { border-color: #2b2b2b !important; }
-        .dark .border-gray-300 { border-color: #3a3a3a !important; }
-        .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #262626 !important; }
-        .dark .text-gray-900 { color: #f5f5f5 !important; }
-        .dark .text-gray-700 { color: #d4d4d4 !important; }
-        .dark .text-gray-600 { color: #b5b5b5 !important; }
-        .dark .text-gray-500 { color: #9a9a9a !important; }
-        .dark .text-gray-400 { color: #6b6b6b !important; }
+        /* Dark theme — the app's default look now, either "system" (follows
+           prefers-color-scheme) or an explicit manual choice, both funneled
+           into the same `.dark` class on <html> so there's one set of
+           override rules regardless of which picked it. Existing templates
+           consistently use a small vocabulary of Tailwind utilities
+           (bg-white, border-gray-200, text-gray-500, etc.), so this block
+           remaps that vocabulary instead of hand-editing every template — a
+           pragmatic tradeoff of the Play-CDN setup; a compiled Tailwind
+           build with real `dark:` variants would be the cleaner long-term
+           version. Palette is a cool navy-black (not pure gray) to match a
+           modern SaaS dashboard feel, with a slate scale for text instead of
+           flat grays. */
+        .dark, .dark body { background-color: #090a10; }
+        .dark body { color: #e7e9f0; }
+        .dark .bg-white { background-color: #12141c !important; }
+        .dark .bg-gray-50 { background-color: #0d0e14 !important; }
+        .dark .bg-gray-100 { background-color: #1a1d28 !important; }
+        .dark .bg-gray-200 { background-color: #232735 !important; }
+        .dark .bg-gray-700 { background-color: #232735 !important; }
+        .dark .bg-gray-800 { background-color: #171922 !important; }
+        .dark .bg-gray-900 { background-color: #12141c !important; }
+        .dark .border-gray-100 { border-color: #1c1f2a !important; }
+        .dark .border-gray-200 { border-color: #242938 !important; }
+        .dark .border-gray-300 { border-color: #333a4b !important; }
+        .dark .border-gray-700 { border-color: #333a4b !important; }
+        .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #1c1f2a !important; }
+        .dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: #242938 !important; }
+        .dark .text-gray-900 { color: #f2f4f8 !important; }
+        .dark .text-gray-800 { color: #e2e5ee !important; }
+        .dark .text-gray-700 { color: #c7cbd9 !important; }
+        .dark .text-gray-600 { color: #a7adbe !important; }
+        .dark .text-gray-500 { color: #868da3 !important; }
+        .dark .text-gray-400 { color: #5e6479 !important; }
+        .dark .text-gray-300 { color: #454b5f !important; }
+        .dark .hover\:bg-gray-50:hover { background-color: #171a24 !important; }
+        .dark .hover\:bg-gray-100:hover { background-color: #1e2230 !important; }
+        .dark .hover\:bg-gray-800:hover { background-color: #1e2230 !important; }
+        .dark .hover\:text-gray-900:hover { color: #f2f4f8 !important; }
+        .dark .hover\:text-gray-700:hover { color: #c7cbd9 !important; }
         .dark input, .dark select, .dark textarea {
-            background-color: #171717 !important;
-            color: #f5f5f5 !important;
-            border-color: #3a3a3a !important;
+            background-color: #171922 !important;
+            color: #f2f4f8 !important;
+            border-color: #333a4b !important;
         }
-        .dark input::placeholder { color: #6b6b6b !important; }
-        .dark .bg-emerald-50 { background-color: rgba(16,185,129,0.12) !important; }
-        .dark .bg-red-50 { background-color: rgba(239,68,68,0.12) !important; }
-        .dark .bg-amber-50 { background-color: rgba(245,158,11,0.12) !important; }
-        .dark .bg-purple-50 { background-color: rgba(168,85,247,0.12) !important; }
-        .dark .bg-blue-50 { background-color: rgba(59,130,246,0.12) !important; }
+        .dark input::placeholder { color: #5e6479 !important; }
+        .dark .bg-emerald-50 { background-color: rgba(16,185,129,0.14) !important; }
+        .dark .bg-red-50 { background-color: rgba(239,68,68,0.14) !important; }
+        .dark .bg-amber-50 { background-color: rgba(245,158,11,0.14) !important; }
+        .dark .bg-purple-50 { background-color: rgba(168,85,247,0.14) !important; }
+        .dark .bg-blue-50 { background-color: rgba(59,130,246,0.14) !important; }
+        .dark .hover\:bg-emerald-50:hover { background-color: rgba(16,185,129,0.2) !important; }
+        .dark .hover\:bg-emerald-50\/40:hover { background-color: rgba(16,185,129,0.14) !important; }
+        .dark .hover\:bg-red-50:hover { background-color: rgba(239,68,68,0.2) !important; }
+        /* Saturated text colors (emerald-700/800, red-700, amber-700/800,
+           purple-700) are tuned for a light background and go near-invisible
+           on a dark one — brighten them, but leave the vivid brand actions
+           (bg-emerald-600, bg-red-600, etc.) alone since those already have
+           enough contrast on dark. */
+        .dark .text-emerald-700 { color: #34d399 !important; }
+        .dark .text-emerald-800 { color: #6ee7b7 !important; }
+        .dark .text-red-600 { color: #f87171 !important; }
+        .dark .text-red-700 { color: #fca5a5 !important; }
+        .dark .text-amber-600 { color: #fbbf24 !important; }
+        .dark .text-amber-700 { color: #fcd34d !important; }
+        .dark .text-amber-800 { color: #fde68a !important; }
+        .dark .text-purple-700 { color: #c4b5fd !important; }
+        .dark .hover\:text-emerald-700:hover { color: #34d399 !important; }
+        .dark .hover\:text-red-700:hover { color: #fca5a5 !important; }
+        .dark .border-emerald-200 { border-color: rgba(16,185,129,0.35) !important; }
+        .dark .border-emerald-300 { border-color: rgba(16,185,129,0.45) !important; }
+        .dark .border-emerald-400 { border-color: rgba(16,185,129,0.55) !important; }
+        .dark .border-amber-200 { border-color: rgba(245,158,11,0.35) !important; }
+        .dark .border-amber-300 { border-color: rgba(245,158,11,0.45) !important; }
+        .dark .border-amber-400 { border-color: rgba(245,158,11,0.55) !important; }
+        .dark .border-red-200 { border-color: rgba(239,68,68,0.35) !important; }
+        .dark .hover\:border-emerald-300:hover { border-color: rgba(16,185,129,0.5) !important; }
+        .dark .hover\:border-emerald-400:hover { border-color: rgba(16,185,129,0.6) !important; }
+        .dark .to-gray-100 { --tw-gradient-to: #1a1d28 !important; }
         [x-cloak] { display: none !important; }
 
         /* Privacy mode: masks money amounts everywhere at once via a single
@@ -117,10 +169,10 @@
     x-data="{ menuOpen: false, analysisOpen: false }"
     x-init="
         Alpine.store('ui', {
-            theme: localStorage.getItem('sikatrack-theme') || 'system',
+            theme: localStorage.getItem('sikatrack-theme') || 'dark',
             privacy: localStorage.getItem('sikatrack-privacy') === '1',
             cycleTheme() {
-                this.theme = this.theme === 'system' ? 'light' : this.theme === 'light' ? 'dark' : 'system';
+                this.theme = this.theme === 'dark' ? 'light' : this.theme === 'light' ? 'system' : 'dark';
                 localStorage.setItem('sikatrack-theme', this.theme);
                 var dark = this.theme === 'dark' || (this.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
                 document.documentElement.classList.toggle('dark', dark);
@@ -336,7 +388,7 @@
                         <span x-show="$store.ui.theme === 'system'" x-cloak>{% icon "auto" "w-5 h-5" %}</span>
                         Theme
                     </span>
-                    <span class="text-xs text-neutral-500" x-text="$store.ui.theme === 'system' ? 'Auto' : $store.ui.theme === 'dark' ? 'Dark' : 'Light'">Auto</span>
+                    <span class="text-xs text-neutral-500" x-text="$store.ui.theme === 'system' ? 'Auto' : $store.ui.theme === 'dark' ? 'Dark' : 'Light'">Dark</span>
                 </button>
                 <button @click="$store.ui.togglePrivacy()" class="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-neutral-400 hover:bg-neutral-900 hover:text-white">
                     <span class="flex items-center gap-3">
@@ -493,7 +545,7 @@
                 <div class="border-t border-gray-100 mt-3 pt-3">
                     <button @click="$store.ui.cycleTheme()" class="w-full flex items-center justify-between gap-3 py-2 text-sm text-gray-700">
                         <span class="flex items-center gap-3">{% icon "auto" "w-4 h-4" %}Theme</span>
-                        <span class="text-xs text-gray-400" x-text="$store.ui.theme === 'system' ? 'Auto' : $store.ui.theme === 'dark' ? 'Dark' : 'Light'">Auto</span>
+                        <span class="text-xs text-gray-400" x-text="$store.ui.theme === 'system' ? 'Auto' : $store.ui.theme === 'dark' ? 'Dark' : 'Light'">Dark</span>
                     </button>
                     <button @click="$store.ui.togglePrivacy()" class="w-full flex items-center justify-between gap-3 py-2 text-sm text-gray-700">
                         <span class="flex items-center gap-3">{% icon "eye" "w-4 h-4" %}Hide amounts</span>
